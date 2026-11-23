@@ -2,7 +2,7 @@ import { ApiError } from '@/api/ApiError';
 import type { Api, FiltrosProjetos, Pagamento } from '@/api/ports';
 import { avisarSessaoExpirada, lerSessao } from '@/features/sessao/armazenamento';
 
-const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+const BASE = import.meta.env.VITE_API_URL ?? '/api';
 
 interface CorpoErro {
   erro?: { codigo?: string; mensagem?: string };

@@ -1,0 +1,59 @@
+# Ambiente provisório da fatia RF01, até a entrega do docker-compose.yml da issue #30.
+# Uso: docker compose -f docker-compose.rf01.yml --env-file backend/.env up
+name: freelahub-rf01
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?defina em backend/.env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina em backend/.env}
+      POSTGRES_DB: ${POSTGRES_DB:?defina em backend/.env}
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - rf01_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  api:
+    image: node:24-alpine
+    working_dir: /app
+    command: sh -c "npm ci && npm run build && npm start"
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      JWT_SECRET: ${JWT_SECRET:?defina em backend/.env}
+      JWT_EXPIRES_IN_SECONDS: ${JWT_EXPIRES_IN_SECONDS:-3600}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?defina em backend/.env}
+      ADMIN_SENHA: ${ADMIN_SENHA:?defina em backend/.env}
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - /app/dist
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    image: node:24-alpine
+    working_dir: /app
+    command: sh -c "npm ci && npm run dev -- --host 0.0.0.0"
+    environment:
+      API_PROXY_TARGET: http://api:3000
+      VITE_USE_MOCK: "false"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "127.0.0.1:5173:5173"
+    depends_on:
+      - api
+
+volumes:
+  rf01_db:

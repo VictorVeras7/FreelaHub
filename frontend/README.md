@@ -18,7 +18,7 @@ A aplicação abre em http://127.0.0.1:5173.
 | Variável | Padrão | Descrição |
 |---|---|---|
 | `VITE_USE_MOCK` | `true` | Com `true`, usa adaptadores simulados em memória. Com `false`, usa a API real. |
-| `VITE_API_URL` | `http://localhost:3000` | Endereço da API Backend. |
+| `VITE_API_URL` | `/api` | Endereço da API. Em desenvolvimento, o Vite encaminha `/api` para `API_PROXY_TARGET` (padrão `http://localhost:3000`). |
 
 No modo simulado, a tela de login tem atalhos para entrar como cliente ou freelancer. Os dados voltam ao estado inicial quando a página é recarregada.
 

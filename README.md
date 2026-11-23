@@ -38,8 +38,8 @@ Os diagramas são mantidos em Structurizr DSL no arquivo [`docs/c4/workspace.dsl
 |---|---|---|
 | Contexto | [`docs/c4/contexto.png`](docs/c4/contexto.png) | Concluída |
 | Container | [`docs/c4/containers.png`](docs/c4/containers.png) | Concluída |
-| Componentes | | Prevista para 23/11 |
-| Código | | Prevista para 23/11 |
+| Componentes | `RF01_Componentes` no `workspace.dsl` | RF01 concluído, demais fatias previstas para 23/11 |
+| Código | `RF01_Codigo` no `workspace.dsl` | RF01 concluído, demais fatias previstas para 23/11 |
 
 Para visualizar o modelo no navegador, cole o conteúdo do `workspace.dsl` em [playground.structurizr.com](https://playground.structurizr.com). Para visualizar localmente com Docker:
 
@@ -79,6 +79,7 @@ backend/src/
   adapters/
     in/http/              controllers Express (adaptador de entrada)
     out/persistence/      repositórios PostgreSQL
+    out/security/         token JWT e hash de senha
     out/payment/          gateway de pagamento simulado
     out/notification/     envio de e-mail simulado
 frontend/                 aplicação React
