@@ -1,6 +1,7 @@
 import { ErroNaoEncontrado, ErroSemPermissao } from '../../domain/erros';
 import { ProjetoRepository } from '../ports/ProjetoRepository';
 import { PropostaRepository } from '../ports/PropostaRepository';
+import { UnidadeDeTrabalho } from '../ports/UnidadeDeTrabalho';
 import { UsuarioRepository } from '../ports/UsuarioRepository';
 import { Solicitante } from '../Solicitante';
 import { detalharProjeto, ProjetoDetalhado } from './detalharProjetos';
@@ -12,39 +13,42 @@ export interface CancelarProjetoEntrada {
 
 /**
  * RF02 e RN07: o cliente dono cancela um projeto ABERTO.
- * O projeto passa para CANCELADO e as propostas PENDENTES passam para RECUSADA.
+ * O projeto passa para CANCELADO e as propostas PENDENTES passam para RECUSADA, na mesma transação.
  */
 export class CancelarProjeto {
   constructor(
     private readonly projetos: ProjetoRepository,
     private readonly propostas: PropostaRepository,
     private readonly usuarios: UsuarioRepository,
+    private readonly unidadeDeTrabalho: UnidadeDeTrabalho,
   ) {}
 
   async executar(entrada: CancelarProjetoEntrada): Promise<ProjetoDetalhado> {
-    const projeto = await this.projetos.buscarPorId(entrada.projetoId);
+    const projeto = await this.unidadeDeTrabalho.executar(() => this.cancelar(entrada));
+    return detalharProjeto(projeto, this.usuarios);
+  }
+
+  private async cancelar({ projetoId, solicitante }: CancelarProjetoEntrada) {
+    const projeto = await this.projetos.buscarPorId(projetoId);
     if (!projeto) {
       throw new ErroNaoEncontrado('Projeto não encontrado.');
     }
-    if (!projeto.pertenceA(entrada.solicitante.id)) {
+    if (!projeto.pertenceA(solicitante.id)) {
       throw new ErroSemPermissao('Somente o cliente que publicou o projeto pode cancelá-lo.');
     }
 
-    // Lança ErroConflito se o projeto não estiver ABERTO, antes de qualquer gravação.
+    // Lança ErroConflito se o projeto não estiver ABERTO.
     projeto.cancelar();
-
-    const pendentes = (await this.propostas.listarPorProjeto(projeto.id)).filter(
-      (proposta) => proposta.status === 'PENDENTE',
-    );
-    pendentes.forEach((proposta) => proposta.recusar());
-
-    // Enquanto não existe a unidade de trabalho (#34), as propostas são gravadas antes do projeto:
-    // se a gravação do projeto falhar, ele continua ABERTO e o cancelamento pode ser repetido.
-    for (const proposta of pendentes) {
-      await this.propostas.salvar(proposta);
-    }
+    // Gravado antes das propostas: se um aceite (RF05) tiver iniciado o projeto ao mesmo tempo,
+    // o repositório recusa a transição com ErroConflito e a transação inteira é desfeita.
     await this.projetos.salvar(projeto);
 
-    return detalharProjeto(projeto, this.usuarios);
+    const propostas = await this.propostas.listarPorProjeto(projeto.id);
+    for (const proposta of propostas.filter((p) => p.status === 'PENDENTE')) {
+      proposta.recusar();
+      await this.propostas.salvar(proposta);
+    }
+
+    return projeto;
   }
 }

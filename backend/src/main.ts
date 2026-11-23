@@ -56,7 +56,7 @@ async function iniciar(): Promise<void> {
         listarProjetos: new ListarProjetos(projetos, usuarios),
         listarMeusProjetos: new ListarMeusProjetos(projetos, usuarios),
         obterProjeto: new ObterProjeto(projetos, usuarios),
-        cancelarProjeto: new CancelarProjeto(projetos, propostas, usuarios),
+        cancelarProjeto: new CancelarProjeto(projetos, propostas, usuarios, unidadeDeTrabalho),
         autenticar: autenticacao,
       }),
       criarRotasDePropostas({

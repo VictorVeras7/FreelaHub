@@ -5,9 +5,11 @@ import { InMemoryProjetoRepository } from '../../src/adapters/out/memoria/InMemo
 import { PostgresProjetoRepository } from '../../src/adapters/out/persistence/PostgresProjetoRepository';
 import { PostgresPropostaRepository } from '../../src/adapters/out/persistence/PostgresPropostaRepository';
 import { PostgresUsuarioRepository } from '../../src/adapters/out/persistence/PostgresUsuarioRepository';
-import { SCHEMA_USUARIOS } from '../../src/adapters/out/persistence/schemaUsuarios';
+import { PostgresUnidadeDeTrabalho } from '../../src/adapters/out/persistence/PostgresUnidadeDeTrabalho';
+import { aplicarMigrations } from '../../src/adapters/out/persistence/migrations/Migrador';
 import { CancelarProjeto } from '../../src/application/casos-de-uso/CancelarProjeto';
 import { FiltrosProjetos, ProjetoRepository } from '../../src/application/ports/ProjetoRepository';
+import { ErroConflito } from '../../src/domain/erros';
 import { PerfilUsuario } from '../../src/domain/PerfilUsuario';
 import { NovoProjeto, Projeto, StatusProjeto } from '../../src/domain/projeto/Projeto';
 import { Proposta } from '../../src/domain/proposta/Proposta';
@@ -16,36 +18,6 @@ const URL_BANCO = process.env.TEST_DATABASE_URL;
 if (!URL_BANCO) {
   throw new Error('Defina TEST_DATABASE_URL para rodar os testes de integração.');
 }
-
-/**
- * Tabelas `projetos` e `propostas` iguais às da migration inicial (#31).
- * Provisório: quando a migration estiver na main, trocar por ela.
- */
-const SCHEMA_PROJETOS_E_PROPOSTAS = `
-  CREATE TABLE projetos (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    cliente_id UUID NOT NULL REFERENCES usuarios (id),
-    titulo VARCHAR(160) NOT NULL,
-    descricao TEXT NOT NULL,
-    orcamento NUMERIC(12, 2) NOT NULL CHECK (orcamento > 0),
-    prazo_desejado DATE,
-    habilidades TEXT[] NOT NULL DEFAULT '{}',
-    status VARCHAR(20) NOT NULL DEFAULT 'ABERTO'
-      CHECK (status IN ('ABERTO', 'EM_ANDAMENTO', 'CONCLUIDO', 'CANCELADO')),
-    criado_em TIMESTAMPTZ NOT NULL DEFAULT now()
-  );
-  CREATE TABLE propostas (
-    id UUID PRIMARY KEY,
-    projeto_id UUID NOT NULL REFERENCES projetos (id),
-    freelancer_id UUID NOT NULL REFERENCES usuarios (id),
-    valor NUMERIC(12, 2) NOT NULL CHECK (valor > 0),
-    prazo_dias INTEGER NOT NULL CHECK (prazo_dias > 0),
-    mensagem TEXT NOT NULL,
-    status VARCHAR(20) NOT NULL DEFAULT 'PENDENTE' CHECK (status IN ('PENDENTE', 'ACEITA', 'RECUSADA')),
-    criada_em TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT uq_proposta_freelancer_projeto UNIQUE (projeto_id, freelancer_id)
-  );
-`;
 
 // Cada execução usa um schema próprio e descartável, sem tocar nos dados do ambiente.
 const SCHEMA = `teste_rf02_${randomBytes(6).toString('hex')}`;
@@ -81,14 +53,13 @@ describe('PostgresProjetoRepository', () => {
     controle = new Pool({ connectionString: URL_BANCO });
     await controle.query(`CREATE SCHEMA ${SCHEMA}`);
     pool = new Pool({ connectionString: URL_BANCO, options: `-c search_path=${SCHEMA}` });
-    await pool.query(SCHEMA_USUARIOS);
-    await pool.query(SCHEMA_PROJETOS_E_PROPOSTAS);
+    await aplicarMigrations(pool);
     repositorio = new PostgresProjetoRepository(pool);
     usuarios = new PostgresUsuarioRepository(pool);
   });
 
   beforeEach(async () => {
-    await pool.query('TRUNCATE propostas, projetos, usuarios');
+    await pool.query('TRUNCATE pagamentos, contratos, propostas, projetos, usuarios');
     const senhaHash = 'hash';
     clienteId = (
       await usuarios.incluir({ nome: 'Ana', email: 'ana@exemplo.com', senhaHash, perfil: PerfilUsuario.CLIENTE })
@@ -191,26 +162,59 @@ describe('PostgresProjetoRepository', () => {
     expect(doBanco.every((p) => p.status === 'ABERTO')).toBe(true);
   });
 
-  it('CancelarProjeto grava o projeto CANCELADO e as propostas RECUSADA no banco', async () => {
-    const propostas = new PostgresPropostaRepository(pool);
+  it('recusa gravar uma transição que o status atual do banco não permite', async () => {
     const projeto = novoProjeto();
     await repositorio.salvar(projeto);
-    const proposta = Proposta.criar({
-      id: randomUUID(),
-      projetoId: projeto.id,
-      freelancerId,
-      valor: 1000,
-      prazoDias: 10,
-      mensagem: 'Posso fazer.',
-    });
-    await propostas.salvar(proposta);
+    const lidoAntes = await repositorio.buscarPorId(projeto.id);
+    // Outra operação (o aceite do RF05) inicia o projeto depois da leitura.
+    await pool.query(`UPDATE projetos SET status = 'EM_ANDAMENTO' WHERE id = $1`, [projeto.id]);
 
-    await new CancelarProjeto(repositorio, propostas, usuarios).executar({
-      projetoId: projeto.id,
-      solicitante: { id: clienteId, perfil: PerfilUsuario.CLIENTE },
+    lidoAntes!.cancelar();
+    await expect(repositorio.salvar(lidoAntes!)).rejects.toThrow(ErroConflito);
+    expect((await repositorio.buscarPorId(projeto.id))?.status).toBe('EM_ANDAMENTO');
+  });
+
+  describe('CancelarProjeto com a unidade de trabalho do PostgreSQL', () => {
+    async function montar() {
+      const unidade = new PostgresUnidadeDeTrabalho(pool);
+      const projetos = new PostgresProjetoRepository(unidade.conexao);
+      const propostas = new PostgresPropostaRepository(unidade.conexao);
+      const projeto = novoProjeto();
+      await projetos.salvar(projeto);
+      const proposta = Proposta.criar({
+        id: randomUUID(),
+        projetoId: projeto.id,
+        freelancerId,
+        valor: 1000,
+        prazoDias: 10,
+        mensagem: 'Posso fazer.',
+      });
+      await propostas.salvar(proposta);
+      const cancelar = new CancelarProjeto(projetos, propostas, usuarios, unidade);
+      const solicitante = { id: clienteId, perfil: PerfilUsuario.CLIENTE };
+      return { projetos, propostas, projeto, proposta, cancelar, solicitante };
+    }
+
+    it('grava o projeto CANCELADO e as propostas RECUSADA', async () => {
+      const { projetos, propostas, projeto, proposta, cancelar, solicitante } = await montar();
+
+      await cancelar.executar({ projetoId: projeto.id, solicitante });
+
+      expect((await projetos.buscarPorId(projeto.id))?.status).toBe('CANCELADO');
+      expect((await propostas.buscarPorId(proposta.id))?.status).toBe('RECUSADA');
     });
 
-    expect((await repositorio.buscarPorId(projeto.id))?.status).toBe('CANCELADO');
-    expect((await propostas.buscarPorId(proposta.id))?.status).toBe('RECUSADA');
+    it('desfaz tudo se a gravação de uma proposta falhar', async () => {
+      const { projetos, propostas, projeto, proposta, cancelar, solicitante } = await montar();
+      const salvarOriginal = propostas.salvar.bind(propostas);
+      propostas.salvar = async (p) => {
+        await salvarOriginal(p);
+        throw new Error('falha depois de gravar');
+      };
+
+      await expect(cancelar.executar({ projetoId: projeto.id, solicitante })).rejects.toThrow('falha depois de gravar');
+      expect((await projetos.buscarPorId(projeto.id))?.status).toBe('ABERTO');
+      expect((await propostas.buscarPorId(proposta.id))?.status).toBe('PENDENTE');
+    });
   });
 });

@@ -1,6 +1,7 @@
 import { ProjetoConsulta, ProjetoResumo } from '../../../application/ports/ProjetoConsulta';
 import { FiltrosProjetos, ProjetoRepository } from '../../../application/ports/ProjetoRepository';
-import { DadosProjeto, Projeto, StatusProjeto } from '../../../domain/projeto/Projeto';
+import { ErroConflito } from '../../../domain/erros';
+import { DadosProjeto, Projeto, StatusProjeto, transicaoPermitida } from '../../../domain/projeto/Projeto';
 
 const maisRecentePrimeiro = (a: DadosProjeto, b: DadosProjeto) => b.criadoEm.getTime() - a.criadoEm.getTime();
 
@@ -11,7 +12,20 @@ const maisRecentePrimeiro = (a: DadosProjeto, b: DadosProjeto) => b.criadoEm.get
 export class InMemoryProjetoRepository implements ProjetoRepository, ProjetoConsulta {
   private readonly registros = new Map<string, DadosProjeto>();
 
+  /** Guarda o estado atual e devolve a função que o restaura, para simular rollback nos testes. */
+  capturar(): () => void {
+    const copia = new Map(this.registros);
+    return () => {
+      this.registros.clear();
+      copia.forEach((dados, id) => this.registros.set(id, dados));
+    };
+  }
+
   async salvar(projeto: Projeto): Promise<void> {
+    const gravado = this.registros.get(projeto.id);
+    if (gravado && gravado.status !== projeto.status && !transicaoPermitida(gravado.status, projeto.status)) {
+      throw new ErroConflito(`O projeto já está com status ${gravado.status}.`);
+    }
     this.registros.set(projeto.id, projeto.paraDados());
   }
 

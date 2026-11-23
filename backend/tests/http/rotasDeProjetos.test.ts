@@ -13,6 +13,7 @@ import { PublicarProjeto } from '../../src/application/casos-de-uso/PublicarProj
 import { Solicitante } from '../../src/application/Solicitante';
 import { Autenticar } from '../../src/application/usecases/Autenticar';
 import { Cadastrar } from '../../src/application/usecases/Cadastrar';
+import { UnidadeDeTrabalhoFalsa } from '../fakes/InMemoryContratos';
 import { cenarioDeProjetos, dadosDoProjeto } from '../fakes/projetos';
 
 const SEGREDO = 'segredo-de-teste-com-mais-de-32-caracteres';
@@ -21,6 +22,7 @@ async function montarApp() {
   const cenario = await cenarioDeProjetos();
   const { projetos, usuarios } = cenario;
   const tokens = new JwtTokenService(SEGREDO, 60);
+  const propostas = new InMemoryPropostaRepository();
   let sequencia = 0;
 
   const app = criarApp({
@@ -32,7 +34,7 @@ async function montarApp() {
         listarProjetos: new ListarProjetos(projetos, usuarios),
         listarMeusProjetos: new ListarMeusProjetos(projetos, usuarios),
         obterProjeto: new ObterProjeto(projetos, usuarios),
-        cancelarProjeto: new CancelarProjeto(projetos, new InMemoryPropostaRepository(), usuarios),
+        cancelarProjeto: new CancelarProjeto(projetos, propostas, usuarios, new UnidadeDeTrabalhoFalsa(projetos, propostas)),
         autenticar: autenticar(tokens),
       }),
     ],

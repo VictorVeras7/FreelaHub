@@ -4,6 +4,7 @@ import { CancelarProjeto } from '../../src/application/casos-de-uso/CancelarProj
 import { ErroConflito, ErroNaoEncontrado, ErroSemPermissao } from '../../src/domain/erros';
 import { StatusProjeto } from '../../src/domain/projeto/Projeto';
 import { Proposta } from '../../src/domain/proposta/Proposta';
+import { UnidadeDeTrabalhoFalsa } from '../fakes/InMemoryContratos';
 import { cenarioDeProjetos } from '../fakes/projetos';
 
 describe('CancelarProjeto', () => {
@@ -11,7 +12,8 @@ describe('CancelarProjeto', () => {
     const cenario = await cenarioDeProjetos();
     const propostas = new InMemoryPropostaRepository();
     const projeto = await cenario.adicionarProjeto(cenario.ana.id, {}, status);
-    const cancelar = new CancelarProjeto(cenario.projetos, propostas, cenario.usuarios);
+    const unidadeDeTrabalho = new UnidadeDeTrabalhoFalsa(cenario.projetos, propostas);
+    const cancelar = new CancelarProjeto(cenario.projetos, propostas, cenario.usuarios, unidadeDeTrabalho);
 
     const novaProposta = async (id: string, freelancerId: string) => {
       const proposta = Proposta.criar({
@@ -26,8 +28,46 @@ describe('CancelarProjeto', () => {
       return proposta;
     };
 
-    return { ...cenario, propostas, projeto, cancelar, novaProposta };
+    return { ...cenario, propostas, projeto, cancelar, unidadeDeTrabalho, novaProposta };
   }
+
+  it('grava o projeto e as propostas dentro de uma única unidade de trabalho', async () => {
+    const { cancelar, projeto, ana, unidadeDeTrabalho, novaProposta } = await montar();
+    await novaProposta('proposta-1', 'freelancer-1');
+
+    await cancelar.executar({ projetoId: projeto.id, solicitante: ana });
+
+    expect(unidadeDeTrabalho.execucoes).toBe(1);
+    expect(unidadeDeTrabalho.confirmacoes).toBe(1);
+  });
+
+  it('desfaz o cancelamento do projeto se a gravação de uma proposta falhar', async () => {
+    const { cancelar, projeto, projetos, propostas, ana, novaProposta } = await montar();
+    await novaProposta('proposta-1', 'freelancer-1');
+    propostas.salvar = async () => {
+      throw new Error('falha no banco');
+    };
+
+    await expect(cancelar.executar({ projetoId: projeto.id, solicitante: ana })).rejects.toThrow('falha no banco');
+    expect((await projetos.buscarPorId(projeto.id))?.status).toBe('ABERTO');
+  });
+
+  it('recusa o cancelamento se outra operação iniciou o projeto depois da leitura', async () => {
+    const { cancelar, projeto, projetos, propostas, ana, novaProposta } = await montar();
+    await novaProposta('proposta-1', 'freelancer-1');
+    // Simula um aceite (RF05) gravado entre a leitura e a gravação do cancelamento.
+    const buscarPorId = projetos.buscarPorId.bind(projetos);
+    projetos.buscarPorId = async (id) => {
+      const lido = await buscarPorId(id);
+      const iniciado = await buscarPorId(id);
+      iniciado?.iniciar();
+      if (iniciado) await projetos.salvar(iniciado);
+      return lido;
+    };
+
+    await expect(cancelar.executar({ projetoId: projeto.id, solicitante: ana })).rejects.toThrow(ErroConflito);
+    expect((await propostas.buscarPorId('proposta-1'))?.status).toBe('PENDENTE');
+  });
 
   it('cancela o projeto ABERTO do dono e recusa as propostas pendentes', async () => {
     const { cancelar, projeto, projetos, propostas, ana, novaProposta } = await montar();

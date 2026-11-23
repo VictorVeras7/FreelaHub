@@ -10,6 +10,17 @@ export const StatusProjeto = {
 
 export type StatusProjeto = (typeof StatusProjeto)[keyof typeof StatusProjeto];
 
+/** Transições permitidas do ciclo de vida, no formato [de, para]. */
+export const TRANSICOES_PROJETO: readonly (readonly [StatusProjeto, StatusProjeto])[] = [
+  [StatusProjeto.ABERTO, StatusProjeto.EM_ANDAMENTO],
+  [StatusProjeto.EM_ANDAMENTO, StatusProjeto.CONCLUIDO],
+  [StatusProjeto.ABERTO, StatusProjeto.CANCELADO],
+];
+
+export function transicaoPermitida(de: StatusProjeto, para: StatusProjeto): boolean {
+  return TRANSICOES_PROJETO.some(([origem, destino]) => origem === de && destino === para);
+}
+
 export interface DadosProjeto {
   id: string;
   clienteId: string;
@@ -155,27 +166,27 @@ export class Projeto {
     return this.dados.clienteId === clienteId;
   }
 
-  /** ABERTO -> EM_ANDAMENTO. Usado pelo caso de uso AceitarProposta (RF05). */
+  /** ABERTO -> EM_ANDAMENTO, quando uma proposta é aceita (RF05). */
   iniciar(): void {
-    this.transicionar(StatusProjeto.ABERTO, StatusProjeto.EM_ANDAMENTO);
+    this.transicionar(StatusProjeto.EM_ANDAMENTO);
   }
 
-  /** EM_ANDAMENTO -> CONCLUIDO. Usado pelo caso de uso LiberarPagamento (RF06). */
+  /** EM_ANDAMENTO -> CONCLUIDO, quando o pagamento é liberado (RF06). */
   concluir(): void {
-    this.transicionar(StatusProjeto.EM_ANDAMENTO, StatusProjeto.CONCLUIDO);
+    this.transicionar(StatusProjeto.CONCLUIDO);
   }
 
   /** ABERTO -> CANCELADO (RF02, RN07). */
   cancelar(): void {
-    this.transicionar(StatusProjeto.ABERTO, StatusProjeto.CANCELADO);
+    this.transicionar(StatusProjeto.CANCELADO);
   }
 
   paraDados(): DadosProjeto {
     return { ...this.dados, habilidades: [...this.dados.habilidades] };
   }
 
-  private transicionar(de: StatusProjeto, para: StatusProjeto): void {
-    if (this.dados.status !== de) {
+  private transicionar(para: StatusProjeto): void {
+    if (!transicaoPermitida(this.dados.status, para)) {
       throw new ErroConflito(
         `O projeto está com status ${this.dados.status} e não pode passar para ${para}.`,
       );

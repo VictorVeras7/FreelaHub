@@ -10,7 +10,11 @@ export interface FiltrosProjetos {
 
 /** Porta de saída para persistência de projetos (ADR-001, ADR-005). */
 export interface ProjetoRepository {
-  /** Insere o projeto ou atualiza o status de um projeto existente. */
+  /**
+   * Insere o projeto ou atualiza o status de um projeto existente.
+   * Lança ErroConflito se o status gravado não permitir a transição, por exemplo
+   * quando outra operação mudou o projeto depois que ele foi lido.
+   */
   salvar(projeto: Projeto): Promise<void>;
   buscarPorId(id: string): Promise<Projeto | null>;
   /** Somente projetos com status ABERTO, do mais recente para o mais antigo. */
