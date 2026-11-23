@@ -11,7 +11,7 @@
     "migrate:down": "tsx src/adapters/out/persistence/migrations/cli.ts down",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --exclude \"tests/integration/**\"",
-    "test:integration": "vitest run --dir tests/integration"
+    "test:integration": "vitest run tests/integration --no-file-parallelism"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

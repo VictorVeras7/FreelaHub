@@ -27,7 +27,7 @@ export function CartaoProjeto({ projeto, rodape }: { projeto: Projeto; rodape?: 
           {extras > 0 && <Etiqueta>{`+${extras}`}</Etiqueta>}
         </div>
         <p className="numeros mt-3 text-lg font-semibold">{formatarMoeda(projeto.orcamento)}</p>
-        <p className="numeros truncate text-detalhe text-texto-suave">{projeto.clienteNome} · até {formatarData(projeto.prazoDesejado)}</p>
+        <p className="numeros truncate text-detalhe text-texto-suave">{projeto.clienteNome} · {projeto.prazoDesejado ? `até ${formatarData(projeto.prazoDesejado)}` : 'sem prazo'}</p>
         {rodape && <div className="relative z-10 mt-3">{rodape}</div>}
       </div>
     </article>

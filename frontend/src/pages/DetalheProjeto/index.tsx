@@ -9,7 +9,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { useToast } from '@/components/Toast';
 import { useCancelarProjeto, useProjeto } from '@/features/projetos/hooks';
 import { useSessao } from '@/features/sessao/SessaoContext';
-import { formatarData, formatarMoeda } from '@/utils/formatar';
+import { formatarData, formatarMoeda, formatarPrazo } from '@/utils/formatar';
 
 export function DetalheProjeto() {
   const { id = '' } = useParams();
@@ -43,7 +43,7 @@ export function DetalheProjeto() {
       </div>
       <dl className="mt-6 grid grid-cols-2 gap-4 rounded-campo bg-neutro-suave p-4 sm:grid-cols-3">
         <Dado rotulo="Orçamento" valor={formatarMoeda(projeto.orcamento)} />
-        <Dado rotulo="Prazo desejado" valor={formatarData(projeto.prazoDesejado)} />
+        <Dado rotulo="Prazo desejado" valor={formatarPrazo(projeto.prazoDesejado)} />
         <Dado rotulo="Publicado em" valor={formatarData(projeto.criadoEm)} />
       </dl>
       <h2 className="mt-6 font-semibold">Descrição</h2>

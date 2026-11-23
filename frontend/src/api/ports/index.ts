@@ -18,7 +18,7 @@ export interface Projeto {
   titulo: string;
   descricao: string;
   orcamento: number;
-  prazoDesejado: string;
+  prazoDesejado: string | null;
   habilidades: string[];
   status: StatusProjeto;
   criadoEm: string;

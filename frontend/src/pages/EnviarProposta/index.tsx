@@ -10,7 +10,7 @@ import { AvisoErro, CabecalhoPagina, Carregando, ErroTela } from '@/components/F
 import { useToast } from '@/components/Toast';
 import { useProjeto } from '@/features/projetos/hooks';
 import { useEnviarProposta } from '@/features/propostas/hooks';
-import { formatarData, formatarMoeda } from '@/utils/formatar';
+import { formatarMoeda, formatarPrazo } from '@/utils/formatar';
 
 const esquema = z.object({
   valor: z.number({ invalid_type_error: 'Informe o valor.' }).positive('O valor deve ser maior que zero.'),
@@ -47,7 +47,7 @@ export function EnviarProposta() {
         <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           <Dado rotulo="Cliente" valor={projeto.clienteNome} />
           <Dado rotulo="Orçamento" valor={formatarMoeda(projeto.orcamento)} />
-          <Dado rotulo="Prazo desejado" valor={formatarData(projeto.prazoDesejado)} />
+          <Dado rotulo="Prazo desejado" valor={formatarPrazo(projeto.prazoDesejado)} />
         </dl>
       </Cartao>
       <Cartao className="mx-auto max-w-2xl p-6 sm:p-8">

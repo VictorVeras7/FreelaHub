@@ -33,7 +33,7 @@ describe('PostgresUsuarioRepository e carga inicial', () => {
   });
 
   beforeEach(async () => {
-    await pool.query('TRUNCATE usuarios');
+    await pool.query('TRUNCATE usuarios CASCADE');
   });
 
   afterAll(async () => {
