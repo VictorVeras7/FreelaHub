@@ -80,7 +80,7 @@ workspace "FreelaHub: Marketplace de Freelancers" "Modelo C4 do trabalho final d
                 inMemoryProjetoRepository = component "InMemoryProjetoRepository" "Implementa ProjetoRepository e ProjetoConsulta em memória, para os testes sem banco (RNF07)." "TypeScript" "RF02,AdaptadorSaida,RF02Codigo,SomenteCodigo"
 
                 # Fatia RF02 e RF03: domínio (visão de Código)
-                projeto = component "Projeto" "Entidade com cliente, título, descrição, orçamento, prazo desejado, habilidades e status. Transições: cancelar, iniciar e concluir." "Classe de domínio" "RF02,Dominio,RF02Codigo,SomenteCodigo"
+                projeto = component "Projeto" "Entidade com cliente, título, descrição, orçamento, prazo desejado, habilidades e status. Transições: cancelar, iniciar e concluir." "Classe de domínio" "RF02,Dominio,RF02Codigo"
                 statusProjeto = component "StatusProjeto" "Enumeração: ABERTO, EM_ANDAMENTO, CONCLUIDO e CANCELADO." "Tipo de domínio" "RF02,Dominio,RF02Codigo,SomenteCodigo"
             }
             db = container "Banco de Dados" "Armazena usuários, projetos, propostas, contratos e pagamentos." "PostgreSQL" "Database"
