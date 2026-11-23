@@ -10,7 +10,7 @@
     "migrate": "tsx src/adapters/out/persistence/migrations/cli.ts",
     "migrate:down": "tsx src/adapters/out/persistence/migrations/cli.ts down",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --exclude tests/integration/**",
+    "test": "vitest run --exclude \"tests/integration/**\"",
     "test:integration": "vitest run --dir tests/integration"
   },
   "dependencies": {
