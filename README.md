@@ -38,8 +38,8 @@ Os diagramas são mantidos em Structurizr DSL no arquivo [`docs/c4/workspace.dsl
 |---|---|---|
 | Contexto | [`docs/c4/contexto.png`](docs/c4/contexto.png) | Concluída |
 | Container | [`docs/c4/containers.png`](docs/c4/containers.png) | Concluída |
-| Componentes | [`componentes-web.png`](docs/c4/componentes-web.png), [`componentes-rf01.png`](docs/c4/componentes-rf01.png), [`componentes-rf02.png`](docs/c4/componentes-rf02.png), [`componentes-propostas.png`](docs/c4/componentes-propostas.png) e [`componentes-rf05.png`](docs/c4/componentes-rf05.png) | Aplicação Web, RF01, RF02, RF03, RF04, RF05 e RF07 modelados. RF06 pendente |
-| Código | [`cadastro-autenticacao.png`](docs/c4/codigo/cadastro-autenticacao.png), [`projetos.png`](docs/c4/codigo/projetos.png), [`propostas-notificacoes.md`](docs/c4/codigo/propostas-notificacoes.md) e [`aceite-de-proposta.png`](docs/c4/codigo/aceite-de-proposta.png) | RF01, RF02, RF03, RF04, RF05 e RF07 modelados. RF06 pendente |
+| Componentes | [Ver todos](docs/c4/README.md#nível-3-componentes) | Aplicação Web, RF01, RF02, RF03, RF04, RF05 e RF07 concluídos. RF06 pendente |
+| Código | [Ver todos](docs/c4/README.md#nível-4-código) | RF01, RF02, RF03, RF04, RF05 e RF07 concluídos. RF06 pendente |
 
 Para visualizar o modelo no navegador, cole o conteúdo do `workspace.dsl` em [playground.structurizr.com](https://playground.structurizr.com). Para visualizar localmente com Docker:
 
