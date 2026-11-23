@@ -38,8 +38,8 @@ Os diagramas são mantidos em Structurizr DSL no arquivo [`docs/c4/workspace.dsl
 |---|---|---|
 | Contexto | [`docs/c4/contexto.png`](docs/c4/contexto.png) | Concluída |
 | Container | [`docs/c4/containers.png`](docs/c4/containers.png) | Concluída |
-| Componentes | [`componentes-web.png`](docs/c4/componentes-web.png), [`componentes-rf01.png`](docs/c4/componentes-rf01.png), [`componentes-propostas.png`](docs/c4/componentes-propostas.png) e [`componentes-rf05.png`](docs/c4/componentes-rf05.png) | Aplicação Web, RF01, RF04, RF05 e RF07 modelados. RF02, RF03 e RF06 pendentes |
-| Código | [`cadastro-autenticacao.png`](docs/c4/codigo/cadastro-autenticacao.png), [`propostas-notificacoes.md`](docs/c4/codigo/propostas-notificacoes.md) e [`aceite-de-proposta.png`](docs/c4/codigo/aceite-de-proposta.png) | RF01, RF04, RF05 e RF07 modelados. RF02, RF03 e RF06 pendentes |
+| Componentes | [`componentes-web.png`](docs/c4/componentes-web.png), [`componentes-rf01.png`](docs/c4/componentes-rf01.png), [`componentes-propostas.png`](docs/c4/componentes-propostas.png), [`componentes-rf05.png`](docs/c4/componentes-rf05.png) e visão RF06 no [`workspace.dsl`](docs/c4/workspace.dsl) | Aplicação Web, RF01, RF04, RF05, RF06 e RF07 modelados. RF02 e RF03 pendentes |
+| Código | [`cadastro-autenticacao.png`](docs/c4/codigo/cadastro-autenticacao.png), [`propostas-notificacoes.md`](docs/c4/codigo/propostas-notificacoes.md), [`aceite-de-proposta.png`](docs/c4/codigo/aceite-de-proposta.png) e [`pagamentos.md`](docs/c4/codigo/pagamentos.md) | RF01, RF04, RF05, RF06 e RF07 modelados. RF02 e RF03 pendentes |
 
 Para visualizar o modelo no navegador, cole o conteúdo do `workspace.dsl` em [playground.structurizr.com](https://playground.structurizr.com). Para visualizar localmente com Docker:
 

@@ -1,7 +1,7 @@
 # ADR-003: Comunicação REST/JSON entre frontend e API
 
 **Status:** Aceita
-**Data:** 16/11/2026 (revisada em 23/11/2026, após a implementação do RF01 ao RF05)
+**Data:** 16/11/2026 (revisada em 23/11/2026, após a implementação do RF01 ao RF06)
 **Responsável:** Emilly Paiva
 
 ## Contexto
@@ -38,13 +38,13 @@ Todas as rotas, menos `/saude`, `POST /usuarios` e `POST /sessoes`, exigem `Auth
 | POST | `/propostas/{id}/aceite` | `AceitarProposta` | Cliente dono do projeto | Implementada (RF05) |
 | GET | `/contratos` | `ConsultarContratos.listar` | Qualquer autenticado (só os contratos de que participa) | Implementada (RF05) |
 | GET | `/contratos/{id}` | `ConsultarContratos.buscar` | Cliente ou Freelancer do contrato | Implementada (RF05) |
-| POST | `/contratos/{id}/pagamento` | `RealizarPagamento` | Cliente do contrato | Prevista (RF06) |
-| GET | `/contratos/{id}/pagamento` | (a definir na fatia RF06) | Cliente ou Freelancer do contrato | Prevista (RF06) |
-| POST | `/contratos/{id}/confirmacao-entrega` | `LiberarPagamento` | Cliente do contrato | Prevista (RF06) |
+| POST | `/contratos/{id}/pagamento` | `RealizarPagamento` | Cliente do contrato | Implementada (RF06) |
+| GET | `/contratos/{id}/pagamento` | `ConsultarPagamento` | Cliente ou Freelancer do contrato | Implementada (RF06) |
+| POST | `/contratos/{id}/confirmacao-entrega` | `LiberarPagamento` | Cliente do contrato | Implementada (RF06) |
 
-As rotas previstas são as que o frontend já consome (`frontend/src/api/http`). Quando a fatia RF06 for entregue, as linhas passam para "Implementada", com o nome real do caso de uso.
+As rotas de pagamento atendem ao cliente HTTP do frontend (`frontend/src/api/http`). O pagamento é criado como PENDENTE, retido após a cobrança simulada e liberado com a conclusão transacional do contrato e do projeto.
 
-Os detalhes de requisição e resposta de cada fatia ficam em `docs/api/`: [projetos](../api/projetos.md) e [propostas](../api/propostas.md).
+Os detalhes de requisição e resposta de cada fatia ficam em `docs/api/`: [projetos](../api/projetos.md), [propostas](../api/propostas.md) e [pagamentos](../api/pagamentos.md).
 
 ### Mapeamento de erros
 Os erros de domínio ficam em `backend/src/domain/erros.ts` e não conhecem HTTP. O middleware `tratarErros` (`errorMiddleware.ts`), registrado uma única vez em `app.ts`, converte cada tipo em status e corpo JSON:

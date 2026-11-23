@@ -33,16 +33,26 @@ workspace "FreelaHub: Marketplace de Freelancers" "Modelo C4 do trabalho final d
                 consoleNotification = component "ConsoleNotificationAdapter" "Implementa NotificationService registrando destinatário, assunto e corpo no console." "TypeScript" "Adaptador"
 
                 # Fatia RF05: aceite de proposta e contratos
-                contratoController = component "ContratoController" "Recebe POST /propostas/{id}/aceite, GET /contratos e GET /contratos/{id}." "Express" "RF05,AdaptadorEntrada"
+                contratoController = component "ContratoController" "Recebe as rotas de aceite, consulta de contratos e operações de pagamento." "Express" "RF05,RF06,RF06Codigo,AdaptadorEntrada"
                 aceitarProposta = component "AceitarProposta" "Aceita a proposta, recusa as demais, inicia o projeto e gera o contrato em uma transação." "TypeScript" "RF05,Aplicacao"
                 consultarContratos = component "ConsultarContratos" "Lista e detalha contratos do usuário participante." "TypeScript" "RF05,Aplicacao"
                 contrato = component "Contrato" "Entidade de domínio com o ciclo de vida ATIVO e CONCLUÍDO." "TypeScript" "RF05,Dominio"
-                contratoRepository = component "ContratoRepository" "Porta de saída para persistência de contratos." "Interface TypeScript" "RF05,Porta"
-                unidadeDeTrabalho = component "UnidadeDeTrabalho" "Porta de saída para execução transacional." "Interface TypeScript" "RF05,Porta"
+                contratoRepository = component "ContratoRepository" "Porta de saída para persistência de contratos." "Interface TypeScript" "RF05,RF06,Porta"
+                unidadeDeTrabalho = component "UnidadeDeTrabalho" "Porta de saída para execução transacional." "Interface TypeScript" "RF05,RF06,Porta"
                 projetoInicio = component "ProjetoInicio" "Porta de saída para a transição de ABERTO para EM_ANDAMENTO." "Interface TypeScript" "RF05,Porta"
-                postgresContratoRepository = component "PostgresContratoRepository" "Implementa ContratoRepository com SQL." "node-postgres" "RF05,AdaptadorSaida"
-                postgresUnidadeDeTrabalho = component "PostgresUnidadeDeTrabalho" "Implementa UnidadeDeTrabalho com transações do PostgreSQL." "node-postgres" "RF05,AdaptadorSaida"
+                postgresContratoRepository = component "PostgresContratoRepository" "Implementa ContratoRepository com SQL." "node-postgres" "RF05,RF06,RF06Codigo,AdaptadorSaida"
+                postgresUnidadeDeTrabalho = component "PostgresUnidadeDeTrabalho" "Implementa UnidadeDeTrabalho com transações do PostgreSQL." "node-postgres" "RF05,RF06,RF06Codigo,AdaptadorSaida"
                 postgresProjetoInicio = component "PostgresProjetoInicio" "Implementa ProjetoInicio com atualização condicional." "node-postgres" "RF05,AdaptadorSaida"
+
+                # Fatia RF06: pagamento em escrow
+                pagamento = component "Pagamento" "Entidade de domínio com ciclo PENDENTE -> RETIDO -> LIBERADO." "TypeScript" "RF06,RF06Codigo,Dominio"
+                realizarPagamento = component "RealizarPagamento" "Valida o cliente do contrato, cobra o valor acordado e retém o pagamento." "TypeScript" "RF06,RF06Codigo,Aplicacao"
+                liberarPagamento = component "LiberarPagamento" "Libera pagamento retido e conclui contrato e projeto em uma transação." "TypeScript" "RF06,RF06Codigo,Aplicacao"
+                consultarPagamento = component "ConsultarPagamento" "Consulta pagamento somente para participantes do contrato." "TypeScript" "RF06,RF06Codigo,Aplicacao"
+                pagamentoRepository = component "PagamentoRepository" "Porta de saída para persistência dos pagamentos." "Interface TypeScript" "RF06,RF06Codigo,Porta"
+                paymentGateway = component "PaymentGateway" "Porta de saída para cobrança e repasse." "Interface TypeScript" "RF06,RF06Codigo,Porta"
+                postgresPagamentoRepository = component "PostgresPagamentoRepository" "Implementa PagamentoRepository sobre a tabela pagamentos." "node-postgres" "RF06,RF06Codigo,AdaptadorSaida"
+                fakePaymentAdapter = component "FakePaymentAdapter" "Simula cobrança e repasse síncronos para a execução local." "TypeScript" "RF06,RF06Codigo,AdaptadorSaida"
 
                 # Fatia RF01: adaptadores de entrada
                 usuariosController = component "UsuariosController" "POST /usuarios: converte a requisição em chamada ao caso de uso Cadastrar." "Express Router" "RF01,AdaptadorEntrada"
@@ -76,7 +86,7 @@ workspace "FreelaHub: Marketplace de Freelancers" "Modelo C4 do trabalho final d
                 listarMeusProjetos = component "ListarMeusProjetos" "Caso de uso: projetos do cliente autenticado, em qualquer status." "Caso de uso" "RF02,Aplicacao,RF02Codigo"
                 obterProjeto = component "ObterProjeto" "Caso de uso: detalhe de um projeto pelo id (RF03)." "Caso de uso" "RF02,Aplicacao,RF02Codigo"
                 projetoRepository = component "ProjetoRepository" "Porta de saída: salvar, buscarPorId, listarAbertos e listarPorCliente." "Interface" "RF02,Porta,RF02Codigo"
-                postgresProjetoRepository = component "PostgresProjetoRepository" "Implementa ProjetoRepository e ProjetoConsulta sobre a tabela projetos." "pg" "RF02,AdaptadorSaida,RF02Codigo"
+                postgresProjetoRepository = component "PostgresProjetoRepository" "Implementa ProjetoRepository e ProjetoConsulta sobre a tabela projetos." "pg" "RF02,RF06,RF06Codigo,AdaptadorSaida,RF02Codigo"
                 inMemoryProjetoRepository = component "InMemoryProjetoRepository" "Implementa ProjetoRepository e ProjetoConsulta em memória, para os testes sem banco (RNF07)." "TypeScript" "RF02,AdaptadorSaida,RF02Codigo,SomenteCodigo"
 
                 # Fatia RF02 e RF03: domínio (visão de Código)
@@ -102,7 +112,7 @@ workspace "FreelaHub: Marketplace de Freelancers" "Modelo C4 do trabalho final d
         admin -> freelahub.webapp "Usa" "HTTPS"
         freelahub.webapp -> freelahub.api "Faz requisições" "JSON/HTTPS (REST) + JWT"
         freelahub.api -> freelahub.db "Lê e grava dados" "SQL (via adaptador de repositório)"
-        freelahub.api -> gatewayPagamento "Cria cobranças e repasses" "HTTPS/REST (adaptador de pagamento)"
+        freelahub.api -> gatewayPagamento "Integração alvo; cobrança e repasse são simulados localmente" "PaymentGateway"
         freelahub.api -> servicoEmail "Envia e-mails" "HTTPS/REST (adaptador de notificação)"
         gatewayPagamento -> freelahub.api "Notifica pagamento confirmado" "Webhook HTTPS"
 
@@ -158,6 +168,29 @@ workspace "FreelaHub: Marketplace de Freelancers" "Modelo C4 do trabalho final d
         freelahub.api.postgresContratoRepository -> freelahub.db "Lê e grava contratos" "SQL"
         freelahub.api.postgresUnidadeDeTrabalho -> freelahub.db "Controla transações" "SQL"
         freelahub.api.postgresProjetoInicio -> freelahub.db "Atualiza o status do projeto" "SQL"
+
+        # Relações da fatia RF06
+        freelahub.webapp.clienteApi -> freelahub.api.contratoController "Realiza pagamento, consulta e confirma entrega" "JSON/HTTPS (REST) + JWT"
+        freelahub.api.contratoController -> freelahub.api.realizarPagamento "Executa"
+        freelahub.api.contratoController -> freelahub.api.consultarPagamento "Executa"
+        freelahub.api.contratoController -> freelahub.api.liberarPagamento "Executa"
+        freelahub.api.realizarPagamento -> freelahub.api.pagamento "Cria e retém"
+        freelahub.api.realizarPagamento -> freelahub.api.contratoRepository "Consulta contrato e cliente"
+        freelahub.api.realizarPagamento -> freelahub.api.pagamentoRepository "Consulta e persiste"
+        freelahub.api.realizarPagamento -> freelahub.api.paymentGateway "Cobra"
+        freelahub.api.realizarPagamento -> freelahub.api.unidadeDeTrabalho "Executa em transação"
+        freelahub.api.consultarPagamento -> freelahub.api.contratoRepository "Verifica participação"
+        freelahub.api.consultarPagamento -> freelahub.api.pagamentoRepository "Consulta"
+        freelahub.api.liberarPagamento -> freelahub.api.pagamento "Libera"
+        freelahub.api.liberarPagamento -> freelahub.api.contratoRepository "Conclui contrato"
+        freelahub.api.liberarPagamento -> freelahub.api.projetoRepository "Conclui projeto"
+        freelahub.api.liberarPagamento -> freelahub.api.pagamentoRepository "Persiste liberação"
+        freelahub.api.liberarPagamento -> freelahub.api.paymentGateway "Libera repasse"
+        freelahub.api.liberarPagamento -> freelahub.api.unidadeDeTrabalho "Conclui em transação"
+        freelahub.api.postgresPagamentoRepository -> freelahub.api.pagamentoRepository "Implementa"
+        freelahub.api.fakePaymentAdapter -> freelahub.api.paymentGateway "Implementa"
+        freelahub.api.postgresPagamentoRepository -> freelahub.db "Lê e grava pagamentos" "SQL"
+        freelahub.api.fakePaymentAdapter -> gatewayPagamento "Simula a integração local; substituível por adaptador real"
 
         # Relações da fatia RF01
         freelahub.webapp -> freelahub.api.usuariosController "Cadastra usuário" "JSON/HTTP"
@@ -260,6 +293,23 @@ workspace "FreelaHub: Marketplace de Freelancers" "Modelo C4 do trabalho final d
             include freelahub.webapp freelahub.db
             autolayout tb
             description "Diagrama de Componentes (C4 nível 3) da fatia RF05: aceite de proposta e contratos."
+        }
+
+        component freelahub.api "RF06_Componentes" {
+            include element.tag==RF06
+            include freelahub.api.authMiddleware freelahub.api.errorMiddleware
+            include freelahub.api.contratoRepository freelahub.api.unidadeDeTrabalho freelahub.api.projetoRepository
+            include freelahub.api.contratoController freelahub.webapp freelahub.db gatewayPagamento
+            autolayout lr
+            description "Diagrama de Componentes (C4 nível 3) da fatia RF06: pagamento em escrow simulado."
+        }
+
+        component freelahub.api "RF06_Codigo" {
+            include element.tag==RF06Codigo
+            include freelahub.api.errosDominio freelahub.api.contratoRepository freelahub.api.projetoRepository
+            include freelahub.api.unidadeDeTrabalho freelahub.api.contrato freelahub.api.projeto
+            autolayout tb
+            description "Visão de Código (C4 nível 4) da fatia RF06: domínio, casos de uso, portas e adaptadores."
         }
 
         component freelahub.api "RF01_Componentes" {

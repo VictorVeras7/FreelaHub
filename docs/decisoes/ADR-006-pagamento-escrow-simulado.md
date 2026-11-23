@@ -18,6 +18,9 @@ Controlar o ciclo de vida do pagamento no domínio e isolar o gateway atrás de 
 - A porta `PaymentGateway` é implementada pelo `FakePaymentAdapter`, que aprova a cobrança e o repasse de forma imediata e gera um identificador de transação simulado.
 - O webhook do gateway aparece nos diagramas como parte da arquitetura alvo. Na versão simulada, a confirmação acontece de forma síncrona.
 
+## Implementação
+O backend implementa a cobrança em `POST /contratos/{id}/pagamento`, a consulta em `GET /contratos/{id}/pagamento` e a liberação em `POST /contratos/{id}/confirmacao-entrega`. O `PagamentoRepository` usa a tabela `pagamentos` já definida na migration inicial. A liberação persiste, em uma única transação, o pagamento LIBERADO, o contrato CONCLUIDO e o projeto CONCLUIDO. A especificação HTTP está em [`docs/api/pagamentos.md`](../api/pagamentos.md), e as visões C4 estão em [`docs/c4/workspace.dsl`](../c4/workspace.dsl) e [`docs/c4/codigo/pagamentos.md`](../c4/codigo/pagamentos.md).
+
 ## Alternativas consideradas
 - **Integração com Mercado Pago ou Stripe em sandbox:** demonstraria o fluxo real, mas exigiria endereço público para webhooks e aumentaria o risco de falha durante a apresentação.
 - **Registrar o pagamento apenas como um campo do contrato:** seria mais simples, mas perderia o ciclo de vida do pagamento e a demonstração de uma porta de saída para um sistema externo.
