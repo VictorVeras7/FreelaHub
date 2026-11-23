@@ -14,12 +14,14 @@ Usar PostgreSQL como banco de dados, executado em container pelo Docker Compose:
 
 - O schema é relacional, com tabelas `usuarios`, `projetos`, `propostas`, `contratos` e `pagamentos` e chaves estrangeiras entre elas.
 - As regras de unicidade também são garantidas no banco, por exemplo `UNIQUE (projeto_id, freelancer_id)` em `propostas`.
-- O schema é versionado com migrations no repositório.
+- O schema é versionado com migrations em TypeScript na pasta `backend/src/adapters/out/persistence/migrations/`. Um migrador próprio registra as versões em `schema_migrations`, aplica tudo em uma transação com bloqueio consultivo e oferece rollback (`npm run migrate` e `npm run migrate:down`). A API aplica as pendentes ao subir.
+- RN03 é garantida por `UNIQUE (projeto_id, freelancer_id)` em `propostas`, RN04 por um índice único parcial de proposta aceita, e cada projeto tem no máximo um contrato. Os status são limitados por `CHECK`.
 - O acesso ao banco fica restrito aos adaptadores de persistência, que implementam as portas `UsuarioRepository`, `ProjetoRepository`, `PropostaRepository`, `ContratoRepository` e `PagamentoRepository`.
 - Operações que alteram várias entidades são executadas dentro de uma transação, controlada pelo adaptador por meio de uma porta de unidade de trabalho.
 
 ## Alternativas consideradas
 - **MongoDB:** o modelo de documentos não oferece de forma natural as restrições entre entidades de que o fluxo depende, o que levaria parte dessas garantias para o código.
+- **node-pg-migrate ou Knex:** resolveriam o versionamento, mas acrescentariam uma dependência para um único schema inicial.
 - **SQLite:** simplificaria a configuração, mas não representa um ambiente próximo do real e tem limitações de concorrência.
 
 ## Consequências

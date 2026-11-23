@@ -38,8 +38,8 @@ Os diagramas são mantidos em Structurizr DSL no arquivo [`docs/c4/workspace.dsl
 |---|---|---|
 | Contexto | [`docs/c4/contexto.png`](docs/c4/contexto.png) | Concluída |
 | Container | [`docs/c4/containers.png`](docs/c4/containers.png) | Concluída |
-| Componentes | `RF01_Componentes` no `workspace.dsl` | RF01 concluído, demais fatias previstas para 23/11 |
-| Código | `RF01_Codigo` no `workspace.dsl` | RF01 concluído, demais fatias previstas para 23/11 |
+| Componentes | `ComponentesWeb`, `RF01_Componentes`, `Componentes-Propostas` e `RF05_Componentes` no `workspace.dsl` | Aplicação Web, RF01, RF04, RF05 e RF07 modelados. RF02, RF03 e RF06 pendentes |
+| Código | `RF01_Codigo`, [`propostas-notificacoes.md`](docs/c4/codigo/propostas-notificacoes.md) e [`aceite-de-proposta.puml`](docs/c4/codigo/aceite-de-proposta.puml) | RF01, RF04, RF05 e RF07 modelados. RF02, RF03 e RF06 pendentes |
 
 Para visualizar o modelo no navegador, cole o conteúdo do `workspace.dsl` em [playground.structurizr.com](https://playground.structurizr.com). Para visualizar localmente com Docker:
 
@@ -55,11 +55,11 @@ A divisão foi feita por fatias verticais do fluxo principal. Cada integrante im
 
 | Integrante | Implementação | Decisão arquitetural |
 |---|---|---|
-| Victor Veras | RF01: entidade Usuário, casos de uso Cadastrar e Autenticar, portas UsuarioRepository e TokenService, middleware JWT, telas de login e cadastro, base do frontend (rotas e cliente HTTP) | [ADR-002](docs/decisoes/ADR-002-autenticacao-jwt.md) |
-| Emilly Paiva | RF02 e RF03: entidade Projeto, casos de uso PublicarProjeto, CancelarProjeto e ListarProjetos, repositório de projetos, telas de listagem, detalhe e novo projeto | [ADR-003](docs/decisoes/ADR-003-comunicacao-rest-json.md) |
-| Natan Lucena | RF04 e RF07: entidade Proposta, caso de uso EnviarProposta, repositório de propostas, porta NotificationService com ConsoleNotificationAdapter, tela de envio de proposta | [ADR-004](docs/decisoes/ADR-004-notificacoes-simuladas.md) |
-| Matheus Rodrigues | RF05: entidade Contrato, caso de uso AceitarProposta, repositório de contratos, tela de propostas recebidas, Docker Compose e schema do PostgreSQL | [ADR-005](docs/decisoes/ADR-005-postgresql.md) |
-| Enzo Hariel | RF06: entidade Pagamento, casos de uso RealizarPagamento e LiberarPagamento, repositório de pagamentos, porta PaymentGateway com FakePaymentAdapter, tela do contrato e do pagamento | [ADR-006](docs/decisoes/ADR-006-pagamento-escrow-simulado.md) |
+| Victor Veras | RF01: entidade Usuário, casos de uso Cadastrar e Autenticar, portas UsuarioRepository e TokenService, middleware JWT e carga inicial do Administrador | [ADR-002](docs/decisoes/ADR-002-autenticacao-jwt.md) |
+| Emilly Paiva | RF02 e RF03: entidade Projeto, casos de uso PublicarProjeto, CancelarProjeto e ListarProjetos, repositório de projetos e rotas de projetos | [ADR-003](docs/decisoes/ADR-003-comunicacao-rest-json.md) |
+| Natan Lucena | RF04 e RF07: entidade Proposta, caso de uso EnviarProposta, repositório de propostas, porta NotificationService com ConsoleNotificationAdapter e rotas de propostas | [ADR-004](docs/decisoes/ADR-004-notificacoes-simuladas.md) |
+| Matheus Rodrigues | Todo o frontend. RF05: entidade Contrato, casos de uso AceitarProposta e ConsultarContratos, repositório de contratos e rotas de aceite e contratos. Schema e migrations do PostgreSQL (#31), assumidos do Victor em 23/11 | [ADR-005](docs/decisoes/ADR-005-postgresql.md) |
+| Enzo Hariel | RF06: entidade Pagamento, casos de uso RealizarPagamento e LiberarPagamento, repositório de pagamentos, porta PaymentGateway com FakePaymentAdapter e rotas de pagamento | [ADR-006](docs/decisoes/ADR-006-pagamento-escrow-simulado.md) |
 
 Atividades comuns a todos os integrantes:
 - Modelar os componentes e as classes da própria fatia nos diagramas de Componentes e de Código (23/11).

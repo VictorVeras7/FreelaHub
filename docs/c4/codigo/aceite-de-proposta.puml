@@ -1,0 +1,94 @@
+@startuml
+title <size:22>Diagrama de Código: Aceite de Proposta (RF05)</size>
+skinparam defaultFontName Arial
+skinparam classAttributeIconSize 0
+hide empty members
+
+package "domain" {
+  enum StatusContrato {
+    ATIVO
+    CONCLUIDO
+  }
+  class Contrato {
+    - dados: DadosContrato
+    + {static} gerar(id: string, proposta: Proposta, projeto: ProjetoDoContrato, agora: Date): Contrato
+    + {static} restaurar(dados: DadosContrato): Contrato
+    + concluir(): void
+    + paraDados(): DadosContrato
+  }
+  class DadosContrato {
+    + id: string
+    + projetoId: string
+    + propostaId: string
+    + clienteId: string
+    + freelancerId: string
+    + valor: number
+    + prazoDias: number
+    + status: StatusContrato
+    + criadoEm: Date
+  }
+  class ContratoJaConcluidoError
+  class ErroConflito
+  class Proposta {
+    + aceitar(): void
+    + recusar(): void
+  }
+  Contrato --> DadosContrato
+  DadosContrato --> StatusContrato
+  Contrato ..> Proposta : copia valor e prazo
+  Contrato ..> ContratoJaConcluidoError : lança
+  ContratoJaConcluidoError --|> ErroConflito
+}
+
+package "application" {
+  class AceitarProposta {
+    + executar(entrada: AceitarPropostaEntrada): Promise<ContratoDetalhado>
+  }
+  class ConsultarContratos {
+    + listar(usuarioId: string): Promise<ContratoDetalhado[]>
+    + buscar(contratoId: string, usuarioId: string): Promise<ContratoDetalhado>
+  }
+  class ContratoDetalhado {
+    + projetoTitulo: string
+    + clienteNome: string
+    + freelancerNome: string
+  }
+  interface ContratoRepository {
+    + salvar(contrato: Contrato): Promise<void>
+    + buscarPorId(id: string): Promise<ContratoDetalhado | null>
+    + listarPorUsuario(usuarioId: string): Promise<ContratoDetalhado[]>
+  }
+  interface UnidadeDeTrabalho {
+    + executar<T>(trabalho: () => Promise<T>): Promise<T>
+  }
+  interface ProjetoInicio {
+    + iniciar(projetoId: string): Promise<void>
+  }
+  interface PropostaRepository
+  interface ProjetoConsulta
+  interface NotificationService
+  ContratoDetalhado --|> DadosContrato
+}
+
+package "adapters" {
+  class ContratoController
+  class PostgresContratoRepository
+  class PostgresUnidadeDeTrabalho
+  class PostgresProjetoInicio
+}
+
+ContratoController --> AceitarProposta
+ContratoController --> ConsultarContratos
+AceitarProposta --> ContratoRepository
+AceitarProposta --> UnidadeDeTrabalho
+AceitarProposta --> ProjetoInicio
+AceitarProposta --> PropostaRepository
+AceitarProposta --> ProjetoConsulta
+AceitarProposta --> NotificationService
+AceitarProposta ..> Contrato : gera
+AceitarProposta ..> Proposta : aceita e recusa
+ConsultarContratos --> ContratoRepository
+PostgresContratoRepository ..|> ContratoRepository
+PostgresUnidadeDeTrabalho ..|> UnidadeDeTrabalho
+PostgresProjetoInicio ..|> ProjetoInicio
+@enduml

@@ -12,11 +12,12 @@ export interface DependenciasRotasDePropostas {
 }
 
 /** Representação JSON de uma proposta nas respostas da API (docs/api/propostas.md). */
-export function propostaParaJson(proposta: DadosProposta) {
+export function propostaParaJson(proposta: DadosProposta & { freelancerNome?: string }) {
   return {
     id: proposta.id,
     projetoId: proposta.projetoId,
     freelancerId: proposta.freelancerId,
+    freelancerNome: proposta.freelancerNome,
     valor: proposta.valor,
     prazoDias: proposta.prazoDias,
     mensagem: proposta.mensagem,
