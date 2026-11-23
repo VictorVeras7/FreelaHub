@@ -62,4 +62,5 @@ O middleware `autenticar` (RF01) valida o token e grava o usuário em `req.usuar
 
 ## Documentação das rotas
 
+- [Projetos](../docs/api/projetos.md)
 - [Propostas](../docs/api/propostas.md)

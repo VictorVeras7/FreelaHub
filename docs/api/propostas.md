@@ -110,4 +110,4 @@ CREATE TABLE propostas (
 );
 ```
 
-Da tabela `projetos`, a fatia lê apenas `id`, `cliente_id`, `titulo` e `status` (valores `ABERTO`, `EM_ANDAMENTO`, `CONCLUIDO`, `CANCELADO`).
+Da tabela `projetos`, a fatia lê (pela porta `ProjetoConsulta`, implementada pelo `PostgresProjetoRepository`) apenas `id`, `cliente_id`, `titulo` e `status` (valores `ABERTO`, `EM_ANDAMENTO`, `CONCLUIDO`, `CANCELADO`).
