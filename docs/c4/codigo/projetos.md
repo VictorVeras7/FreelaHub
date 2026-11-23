@@ -67,6 +67,10 @@ classDiagram
         class UsuarioRepository {
             <<interface>>
         }
+        class UnidadeDeTrabalho {
+            <<interface>>
+            +executar(trabalho) T
+        }
     }
 
     namespace Adaptadores {
@@ -91,6 +95,7 @@ classDiagram
     PublicarProjeto --> ProjetoRepository
     CancelarProjeto --> ProjetoRepository
     CancelarProjeto --> PropostaRepository : recusa pendentes
+    CancelarProjeto --> UnidadeDeTrabalho : uma transação
     ListarProjetos --> ProjetoRepository
     ListarMeusProjetos --> ProjetoRepository
     ObterProjeto --> ProjetoRepository
@@ -131,4 +136,4 @@ Os dois repositórios de projetos implementam também a porta `ProjetoConsulta` 
 | `iniciar()` | ABERTO | EM_ANDAMENTO | `AceitarProposta` (RF05) |
 | `concluir()` | EM_ANDAMENTO | CONCLUIDO | `LiberarPagamento` (RF06) |
 
-Qualquer outra transição lança `ErroConflito`, que a API devolve como 409.
+As transições ficam em `TRANSICOES_PROJETO`, no domínio. Qualquer outra lança `ErroConflito`, que a API devolve como 409. Os repositórios usam a mesma tabela ao gravar: o PostgreSQL só atualiza o status se o valor gravado permitir a transição, o que protege contra um aceite e um cancelamento simultâneos.

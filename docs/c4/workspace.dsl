@@ -203,6 +203,7 @@ workspace "FreelaHub: Marketplace de Freelancers" "Modelo C4 do trabalho final d
         freelahub.api.cancelarProjeto -> freelahub.api.projeto "Cancela"
         freelahub.api.cancelarProjeto -> freelahub.api.projetoRepository "Busca e salva"
         freelahub.api.cancelarProjeto -> freelahub.api.propostaRepository "Recusa as propostas pendentes"
+        freelahub.api.cancelarProjeto -> freelahub.api.unidadeDeTrabalho "Grava projeto e propostas em uma transação"
         freelahub.api.listarProjetos -> freelahub.api.projetoRepository "Lista abertos com filtros"
         freelahub.api.listarMeusProjetos -> freelahub.api.projetoRepository "Lista por cliente"
         freelahub.api.obterProjeto -> freelahub.api.projetoRepository "Busca por id"
@@ -280,14 +281,14 @@ workspace "FreelaHub: Marketplace de Freelancers" "Modelo C4 do trabalho final d
             exclude element.tag==SomenteCodigo
             include freelahub.webapp freelahub.db
             include freelahub.api.authMiddleware freelahub.api.errorMiddleware
-            include freelahub.api.usuarioRepository freelahub.api.propostaRepository freelahub.api.projetoConsulta
+            include freelahub.api.usuarioRepository freelahub.api.propostaRepository freelahub.api.projetoConsulta freelahub.api.unidadeDeTrabalho
             autolayout lr
             description "Diagrama de Componentes (C4 nível 3) da API: fatia de projetos (RF02 e RF03)."
         }
 
         component freelahub.api "RF02_Codigo" {
             include element.tag==RF02Codigo
-            include freelahub.api.errosDominio freelahub.api.usuarioRepository freelahub.api.propostaRepository freelahub.api.projetoConsulta
+            include freelahub.api.errosDominio freelahub.api.usuarioRepository freelahub.api.propostaRepository freelahub.api.projetoConsulta freelahub.api.unidadeDeTrabalho
             autolayout tb
             description "Visão de Código (C4 nível 4) da fatia RF02/RF03: classe Projeto, enum de status, casos de uso, porta e adaptadores."
         }

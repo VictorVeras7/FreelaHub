@@ -124,7 +124,7 @@ Qualquer usuário autenticado. Devolve o projeto em qualquer status.
 
 Somente o **cliente que publicou o projeto** (RN07), e somente enquanto ele estiver `ABERTO` (RF02). Sem corpo.
 
-O projeto passa para `CANCELADO` e todas as propostas `PENDENTE` dele passam para `RECUSADA`.
+O projeto passa para `CANCELADO` e todas as propostas `PENDENTE` dele passam para `RECUSADA`, na mesma transação (`UnidadeDeTrabalho`, ADR-005). Se qualquer gravação falhar, nada é alterado.
 
 ### Resposta `200 OK`
 
@@ -137,8 +137,8 @@ O projeto com status `CANCELADO`.
 | 401 | Token ausente ou inválido |
 | 403 | Usuário não é o cliente dono do projeto |
 | 404 | Projeto não encontrado |
-| 409 | Projeto não está `ABERTO` |
+| 409 | Projeto não está `ABERTO`, inclusive quando uma proposta foi aceita ao mesmo tempo |
 
 ## Persistência
 
-O `PostgresProjetoRepository` usa a tabela `projetos` da migration inicial (ADR-005): `id`, `cliente_id`, `titulo`, `descricao`, `orcamento NUMERIC(12, 2)`, `prazo_desejado DATE`, `habilidades TEXT[]`, `status` e `criado_em`. Depois de criado, só o `status` do projeto é atualizado.
+O `PostgresProjetoRepository` usa a tabela `projetos` da migration inicial (ADR-005): `id`, `cliente_id`, `titulo`, `descricao`, `orcamento NUMERIC(12, 2)`, `prazo_desejado DATE`, `habilidades TEXT[]`, `status` e `criado_em`. Depois de criado, só o `status` do projeto é atualizado, e somente se o status gravado permitir a transição. Assim, se um aceite (RF05) e um cancelamento chegarem ao mesmo tempo, apenas o primeiro a gravar tem efeito e o segundo recebe 409.

@@ -1,7 +1,7 @@
 # ADR-003: Comunicação REST/JSON entre frontend e API
 
 **Status:** Aceita
-**Data:** 16/11/2026 (revisada em 23/11/2026, após a implementação do RF01, do RF02/RF03 e do RF04)
+**Data:** 16/11/2026 (revisada em 23/11/2026, após a implementação do RF01 ao RF05)
 **Responsável:** Emilly Paiva
 
 ## Contexto
@@ -35,14 +35,14 @@ Todas as rotas, menos `/saude`, `POST /usuarios` e `POST /sessoes`, exigem `Auth
 | POST | `/projetos/{id}/cancelamento` | `CancelarProjeto` | Cliente dono do projeto | Implementada (RF02) |
 | POST | `/projetos/{id}/propostas` | `EnviarProposta` | Freelancer | Implementada (RF04) |
 | GET | `/projetos/{id}/propostas` | `ListarPropostasDoProjeto` | Cliente dono do projeto | Implementada (RF04) |
-| POST | `/propostas/{id}/aceite` | `AceitarProposta` | Cliente dono do projeto | Prevista (RF05) |
-| GET | `/contratos` | (a definir na fatia RF05) | Cliente ou Freelancer do contrato | Prevista (RF05) |
-| GET | `/contratos/{id}` | (a definir na fatia RF05) | Cliente ou Freelancer do contrato | Prevista (RF05) |
+| POST | `/propostas/{id}/aceite` | `AceitarProposta` | Cliente dono do projeto | Implementada (RF05) |
+| GET | `/contratos` | `ConsultarContratos.listar` | Qualquer autenticado (só os contratos de que participa) | Implementada (RF05) |
+| GET | `/contratos/{id}` | `ConsultarContratos.buscar` | Cliente ou Freelancer do contrato | Implementada (RF05) |
 | POST | `/contratos/{id}/pagamento` | `RealizarPagamento` | Cliente do contrato | Prevista (RF06) |
 | GET | `/contratos/{id}/pagamento` | (a definir na fatia RF06) | Cliente ou Freelancer do contrato | Prevista (RF06) |
 | POST | `/contratos/{id}/confirmacao-entrega` | `LiberarPagamento` | Cliente do contrato | Prevista (RF06) |
 
-As rotas previstas são as que o frontend já consome (`frontend/src/api/http`). Quando cada fatia for entregue, a linha passa para "Implementada", com o nome real do caso de uso.
+As rotas previstas são as que o frontend já consome (`frontend/src/api/http`). Quando a fatia RF06 for entregue, as linhas passam para "Implementada", com o nome real do caso de uso.
 
 Os detalhes de requisição e resposta de cada fatia ficam em `docs/api/`: [projetos](../api/projetos.md) e [propostas](../api/propostas.md).
 
@@ -55,7 +55,7 @@ Os erros de domínio ficam em `backend/src/domain/erros.ts` e não conhecem HTTP
 | `ErroNaoAutenticado` | 401 | `NAO_AUTENTICADO` | Token ausente, malformado ou expirado; credenciais inválidas |
 | `ErroSemPermissao` | 403 | `SEM_PERMISSAO` | Freelancer publicando projeto; quem não é dono cancelando projeto |
 | `ErroNaoEncontrado` | 404 | `NAO_ENCONTRADO` | Projeto inexistente |
-| `ErroConflito` | 409 | `CONFLITO` | Cancelar projeto que não está ABERTO; e-mail já cadastrado; proposta repetida |
+| `ErroConflito` | 409 | `CONFLITO` | Cancelar projeto que não está ABERTO; e-mail já cadastrado; proposta repetida; aceite e cancelamento simultâneos do mesmo projeto |
 
 Corpo de todas as respostas de erro:
 
