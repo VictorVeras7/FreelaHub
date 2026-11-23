@@ -7,7 +7,7 @@ import { ConsoleNotificationAdapter } from './adapters/out/notification/ConsoleN
 import { PostgresProjetoConsulta } from './adapters/out/persistence/PostgresProjetoConsulta';
 import { PostgresPropostaRepository } from './adapters/out/persistence/PostgresPropostaRepository';
 import { PostgresUsuarioRepository } from './adapters/out/persistence/PostgresUsuarioRepository';
-import { SCHEMA_USUARIOS } from './adapters/out/persistence/schemaUsuarios';
+import { aplicarMigrations } from './adapters/out/persistence/migrations/Migrador';
 import { carregarAdministrador } from './adapters/out/persistence/seedAdministrador';
 import { BcryptSenhaHasher } from './adapters/out/security/BcryptSenhaHasher';
 import { JwtTokenService } from './adapters/out/security/JwtTokenService';
@@ -27,7 +27,7 @@ async function iniciar(): Promise<void> {
   const propostas = new PostgresPropostaRepository(pool);
   const notificacoes = new ConsoleNotificationAdapter();
 
-  await pool.query(SCHEMA_USUARIOS);
+  await aplicarMigrations(pool);
   await carregarAdministrador(pool, hasher, { email: config.adminEmail, senha: config.adminSenha });
 
   const app = criarApp({

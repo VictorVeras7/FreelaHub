@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { Pool } from 'pg';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { PostgresUsuarioRepository } from '../../src/adapters/out/persistence/PostgresUsuarioRepository';
-import { SCHEMA_USUARIOS } from '../../src/adapters/out/persistence/schemaUsuarios';
+import { aplicarMigrations } from '../../src/adapters/out/persistence/migrations/Migrador';
 import { carregarAdministrador } from '../../src/adapters/out/persistence/seedAdministrador';
 import { BcryptSenhaHasher } from '../../src/adapters/out/security/BcryptSenhaHasher';
 import { ErroConflito } from '../../src/domain/erros';
@@ -28,7 +28,7 @@ describe('PostgresUsuarioRepository e carga inicial', () => {
     controle = new Pool({ connectionString: URL_BANCO });
     await controle.query(`CREATE SCHEMA ${SCHEMA}`);
     pool = new Pool({ connectionString: URL_BANCO, options: `-c search_path=${SCHEMA}` });
-    await pool.query(SCHEMA_USUARIOS);
+    await aplicarMigrations(pool);
     repositorio = new PostgresUsuarioRepository(pool);
   });
 

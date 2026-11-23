@@ -40,6 +40,15 @@ npm run dev
 
 O CI (`.github/workflows/backend.yml`) roda tipos, testes e build em todo pull request que altera o backend.
 
+## Banco de dados
+
+A API aplica as migrations pendentes ao subir. Para executar manualmente, com `DATABASE_URL` definida:
+
+```bash
+npm run migrate
+npm run migrate:down
+```
+
 ## Como cada fatia se conecta
 
 1. Entidades e regras em `src/domain/<entidade>/`.
