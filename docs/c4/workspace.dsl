@@ -43,6 +43,8 @@ workspace "FreelaHub: Marketplace de Freelancers" "Modelo C4 do trabalho final d
                 postgresContratoRepository = component "PostgresContratoRepository" "Implementa ContratoRepository com SQL." "node-postgres" "RF05,AdaptadorSaida"
                 postgresUnidadeDeTrabalho = component "PostgresUnidadeDeTrabalho" "Implementa UnidadeDeTrabalho com transações do PostgreSQL." "node-postgres" "RF05,AdaptadorSaida"
                 postgresProjetoInicio = component "PostgresProjetoInicio" "Implementa ProjetoInicio com atualização condicional." "node-postgres" "RF05,AdaptadorSaida"
+                statusContrato = component "StatusContrato" "Enumeração: ATIVO e CONCLUIDO." "Tipo de domínio" "RF05,Dominio,SomenteCodigo"
+                contratoJaConcluidoError = component "ContratoJaConcluidoError" "Erro lançado ao concluir um contrato já concluído." "Classe de domínio" "RF05,Dominio,SomenteCodigo"
 
                 # Fatia RF01: adaptadores de entrada
                 usuariosController = component "UsuariosController" "POST /usuarios: converte a requisição em chamada ao caso de uso Cadastrar." "Express Router" "RF01,AdaptadorEntrada"
@@ -158,6 +160,9 @@ workspace "FreelaHub: Marketplace de Freelancers" "Modelo C4 do trabalho final d
         freelahub.api.postgresContratoRepository -> freelahub.db "Lê e grava contratos" "SQL"
         freelahub.api.postgresUnidadeDeTrabalho -> freelahub.db "Controla transações" "SQL"
         freelahub.api.postgresProjetoInicio -> freelahub.db "Atualiza o status do projeto" "SQL"
+        freelahub.api.contrato -> freelahub.api.statusContrato "Possui um"
+        freelahub.api.contrato -> freelahub.api.contratoJaConcluidoError "Lança"
+        freelahub.api.contrato -> freelahub.api.proposta "Copia valor e prazo"
 
         # Relações da fatia RF01
         freelahub.webapp -> freelahub.api.usuariosController "Cadastra usuário" "JSON/HTTP"
@@ -255,11 +260,27 @@ workspace "FreelaHub: Marketplace de Freelancers" "Modelo C4 do trabalho final d
 
         component freelahub.api "RF05_Componentes" {
             include element.tag==RF05
+            exclude element.tag==SomenteCodigo
             include freelahub.api.proposta freelahub.api.propostaRepository freelahub.api.projetoConsulta freelahub.api.notificationService
             include freelahub.api.authMiddleware freelahub.api.errorMiddleware
             include freelahub.webapp freelahub.db
             autolayout tb
             description "Diagrama de Componentes (C4 nível 3) da fatia RF05: aceite de proposta e contratos."
+        }
+
+        component freelahub.api "RF05_Codigo" {
+            include element.tag==RF05
+            include freelahub.api.proposta freelahub.api.propostaRepository freelahub.api.projetoConsulta freelahub.api.notificationService
+            autolayout tb
+            description "Visão de Código (C4 nível 4) da fatia RF05: aceite de proposta e contratos."
+        }
+
+        component freelahub.api "RF04_Codigo" {
+            include freelahub.api.rotasPropostas freelahub.api.enviarProposta freelahub.api.listarPropostas freelahub.api.proposta
+            include freelahub.api.propostaRepository freelahub.api.projetoConsulta freelahub.api.notificationService
+            include freelahub.api.postgresPropostaRepository freelahub.api.consoleNotification
+            autolayout tb
+            description "Visão de Código (C4 nível 4) da fatia RF04 e RF07: propostas e notificações."
         }
 
         component freelahub.api "RF01_Componentes" {
