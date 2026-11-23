@@ -38,8 +38,8 @@ Os diagramas são mantidos em Structurizr DSL no arquivo [`docs/c4/workspace.dsl
 |---|---|---|
 | Contexto | [`docs/c4/contexto.png`](docs/c4/contexto.png) | Concluída |
 | Container | [`docs/c4/containers.png`](docs/c4/containers.png) | Concluída |
-| Componentes | `RF01_Componentes` no `workspace.dsl` | RF01 concluído, demais fatias previstas para 23/11 |
-| Código | `RF01_Codigo` no `workspace.dsl` | RF01 concluído, demais fatias previstas para 23/11 |
+| Componentes | `ComponentesWeb`, `RF01_Componentes`, `Componentes-Propostas` e `RF05_Componentes` no `workspace.dsl` | Aplicação Web, RF01, RF04, RF05 e RF07 modelados. RF02, RF03 e RF06 pendentes |
+| Código | `RF01_Codigo`, [`propostas-notificacoes.md`](docs/c4/codigo/propostas-notificacoes.md) e [`aceite-de-proposta.puml`](docs/c4/codigo/aceite-de-proposta.puml) | RF01, RF04, RF05 e RF07 modelados. RF02, RF03 e RF06 pendentes |
 
 Para visualizar o modelo no navegador, cole o conteúdo do `workspace.dsl` em [playground.structurizr.com](https://playground.structurizr.com). Para visualizar localmente com Docker:
 

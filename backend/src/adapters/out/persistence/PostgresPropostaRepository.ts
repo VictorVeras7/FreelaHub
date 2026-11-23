@@ -16,6 +16,7 @@ interface LinhaProposta {
 
 const COLUNAS = 'id, projeto_id, freelancer_id, valor, prazo_dias, mensagem, status, criada_em';
 const VIOLACAO_DE_UNICIDADE = '23505';
+const FORMATO_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Adaptador PostgreSQL da porta PropostaRepository (tabela `propostas`, ADR-005). */
 export class PostgresPropostaRepository implements PropostaRepository {
@@ -49,6 +50,7 @@ export class PostgresPropostaRepository implements PropostaRepository {
   }
 
   async buscarPorId(id: string): Promise<Proposta | null> {
+    if (!FORMATO_UUID.test(id)) return null;
     const resultado = await this.db.query<LinhaProposta>(`SELECT ${COLUNAS} FROM propostas WHERE id = $1`, [id]);
     return resultado.rows[0] ? paraEntidade(resultado.rows[0]) : null;
   }
