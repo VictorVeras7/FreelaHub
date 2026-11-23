@@ -1,0 +1,89 @@
+@startuml
+title <size:22>Diagrama de Código: Pagamentos (RF06)</size>
+skinparam defaultFontName Arial
+skinparam classAttributeIconSize 0
+hide empty members
+
+package "domain" {
+  enum StatusPagamento {
+    PENDENTE
+    RETIDO
+    LIBERADO
+  }
+  class DadosPagamento {
+    +id: string
+    +contratoId: string
+    +valor: number
+    +status: StatusPagamento
+    +transacaoId: string | null
+    +atualizadoEm: Date
+  }
+  class Pagamento {
+    -dados: DadosPagamento
+    +{static} criar(dados, agora): Pagamento
+    +{static} restaurar(dados): Pagamento
+    +reter(transacaoId, agora): void
+    +liberar(agora): void
+    +paraDados(): DadosPagamento
+  }
+  class ErroConflito
+  class ErroValidacao
+  Pagamento --> DadosPagamento
+  DadosPagamento --> StatusPagamento
+  Pagamento ..> ErroConflito : lança
+  Pagamento ..> ErroValidacao : lança
+}
+
+package "application" {
+  class RealizarPagamento {
+    +executar(contratoId, usuarioId): Promise<Pagamento>
+  }
+  class LiberarPagamento {
+    +executar(contratoId, usuarioId): Promise<Pagamento>
+  }
+  interface PagamentoRepository {
+    +salvar(pagamento): Promise<void>
+    +buscarPorContrato(contratoId): Promise<Pagamento | null>
+  }
+  interface PaymentGateway {
+    +cobrar(pagamentoId, valor): Promise<string>
+    +liberar(transacaoId, valor): Promise<void>
+  }
+  interface ContratoRepository {
+    +buscarPorId(id): Promise<ContratoDetalhado | null>
+    +salvar(contrato): Promise<void>
+  }
+  interface ProjetoRepository {
+    +buscarPorId(id): Promise<Projeto | null>
+    +salvar(projeto): Promise<void>
+  }
+  interface UnidadeDeTrabalho {
+    +executar<T>(trabalho): Promise<T>
+  }
+}
+
+package "adapters" {
+  class ContratoController {
+    +realizarPagamento(): Response
+    +confirmarEntrega(): Response
+  }
+  class PostgresPagamentoRepository
+  class FakePaymentAdapter
+}
+
+ContratoController --> RealizarPagamento
+ContratoController --> LiberarPagamento
+RealizarPagamento --> PagamentoRepository
+RealizarPagamento --> PaymentGateway
+RealizarPagamento --> ContratoRepository
+RealizarPagamento --> UnidadeDeTrabalho
+RealizarPagamento ..> Pagamento : cria e retém
+LiberarPagamento --> PagamentoRepository
+LiberarPagamento --> PaymentGateway
+LiberarPagamento --> ContratoRepository
+LiberarPagamento --> ProjetoRepository
+LiberarPagamento --> UnidadeDeTrabalho
+LiberarPagamento ..> Pagamento : libera
+PostgresPagamentoRepository ..|> PagamentoRepository
+FakePaymentAdapter ..|> PaymentGateway
+@enduml
