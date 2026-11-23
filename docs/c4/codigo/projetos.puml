@@ -1,0 +1,124 @@
+@startuml
+title <size:22>Diagrama de Código: Projetos (RF02 e RF03)</size>
+skinparam defaultFontName Arial
+skinparam classAttributeIconSize 0
+hide empty members
+
+package "domain" {
+  enum StatusProjeto {
+    ABERTO
+    EM_ANDAMENTO
+    CONCLUIDO
+    CANCELADO
+  }
+  class Projeto {
+    - dados: DadosProjeto
+    + {static} criar(novo: NovoProjeto, agora: Date): Projeto
+    + {static} restaurar(dados: DadosProjeto): Projeto
+    + pertenceA(clienteId: string): boolean
+    + iniciar(): void
+    + concluir(): void
+    + cancelar(): void
+    + paraDados(): DadosProjeto
+    - transicionar(para: StatusProjeto): void
+  }
+  class DadosProjeto {
+    + id: string
+    + clienteId: string
+    + titulo: string
+    + descricao: string
+    + orcamento: number
+    + prazoDesejado: string | null
+    + habilidades: string[]
+    + status: StatusProjeto
+    + criadoEm: Date
+  }
+  class TRANSICOES_PROJETO <<const>> {
+    ABERTO -> EM_ANDAMENTO
+    EM_ANDAMENTO -> CONCLUIDO
+    ABERTO -> CANCELADO
+  }
+  class ErroConflito
+  class Proposta {
+    + recusar(): void
+  }
+  Projeto --> DadosProjeto
+  DadosProjeto --> StatusProjeto
+  Projeto ..> TRANSICOES_PROJETO : valida transição
+  Projeto ..> ErroConflito : lança
+}
+
+package "application" {
+  class PublicarProjeto {
+    + executar(entrada: PublicarProjetoEntrada): Promise<ProjetoDetalhado>
+  }
+  class CancelarProjeto {
+    + executar(entrada: CancelarProjetoEntrada): Promise<ProjetoDetalhado>
+  }
+  class ListarProjetos {
+    + executar(entrada: ListarProjetosEntrada): Promise<ProjetoDetalhado[]>
+  }
+  class ListarMeusProjetos {
+    + executar(entrada: ListarMeusProjetosEntrada): Promise<ProjetoDetalhado[]>
+  }
+  class ObterProjeto {
+    + executar(entrada: ObterProjetoEntrada): Promise<ProjetoDetalhado>
+  }
+  class ProjetoDetalhado {
+    + clienteNome: string
+  }
+  class FiltrosProjetos {
+    + habilidade?: string
+    + orcamentoMin?: number
+    + orcamentoMax?: number
+  }
+  interface ProjetoRepository {
+    + salvar(projeto: Projeto): Promise<void>
+    + buscarPorId(id: string): Promise<Projeto | null>
+    + listarAbertos(filtros: FiltrosProjetos): Promise<Projeto[]>
+    + listarPorCliente(clienteId: string): Promise<Projeto[]>
+  }
+  interface ProjetoConsulta {
+    + buscarResumo(projetoId: string): Promise<ProjetoResumo | null>
+  }
+  interface UnidadeDeTrabalho {
+    + executar<T>(trabalho: () => Promise<T>): Promise<T>
+  }
+  interface PropostaRepository
+  interface UsuarioRepository
+  ProjetoDetalhado --|> DadosProjeto
+  ProjetoRepository ..> FiltrosProjetos
+}
+
+package "adapters" {
+  class RotasDeProjetos
+  class PostgresProjetoRepository
+  class InMemoryProjetoRepository
+}
+
+RotasDeProjetos --> PublicarProjeto
+RotasDeProjetos --> CancelarProjeto
+RotasDeProjetos --> ListarProjetos
+RotasDeProjetos --> ListarMeusProjetos
+RotasDeProjetos --> ObterProjeto
+PublicarProjeto --> ProjetoRepository
+PublicarProjeto --> UsuarioRepository
+PublicarProjeto ..> Projeto : cria
+CancelarProjeto --> ProjetoRepository
+CancelarProjeto --> PropostaRepository
+CancelarProjeto --> UnidadeDeTrabalho
+CancelarProjeto --> UsuarioRepository
+CancelarProjeto ..> Projeto : cancela
+CancelarProjeto ..> Proposta : recusa pendentes
+ListarProjetos --> ProjetoRepository
+ListarProjetos --> UsuarioRepository
+ListarMeusProjetos --> ProjetoRepository
+ListarMeusProjetos --> UsuarioRepository
+ObterProjeto --> ProjetoRepository
+ObterProjeto --> UsuarioRepository
+PostgresProjetoRepository ..|> ProjetoRepository
+PostgresProjetoRepository ..|> ProjetoConsulta
+PostgresProjetoRepository ..> TRANSICOES_PROJETO : atualização condicional
+InMemoryProjetoRepository ..|> ProjetoRepository
+InMemoryProjetoRepository ..|> ProjetoConsulta
+@enduml
