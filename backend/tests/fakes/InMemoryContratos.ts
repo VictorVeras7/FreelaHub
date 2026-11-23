@@ -8,6 +8,14 @@ import { InMemoryProjetoConsulta } from './InMemoryProjetoConsulta';
 export class InMemoryContratoRepository implements ContratoRepository {
   readonly registros = new Map<string, ContratoDetalhado>();
 
+  capturar(): () => void {
+    const copia = new Map(this.registros);
+    return () => {
+      this.registros.clear();
+      copia.forEach((contrato, id) => this.registros.set(id, contrato));
+    };
+  }
+
   async salvar(contrato: Contrato): Promise<void> {
     this.registros.set(contrato.id, {
       ...contrato.paraDados(),
@@ -36,11 +44,30 @@ export class InMemoryProjetoInicio implements ProjetoInicio {
   }
 }
 
+interface Transacional {
+  capturar(): () => void;
+}
+
+/** Descarta as alterações dos repositórios participantes quando o trabalho lança erro. */
 export class UnidadeDeTrabalhoFalsa implements UnidadeDeTrabalho {
   execucoes = 0;
+  confirmacoes = 0;
+  private readonly participantes: Transacional[];
+
+  constructor(...participantes: Transacional[]) {
+    this.participantes = participantes;
+  }
 
   async executar<T>(trabalho: () => Promise<T>): Promise<T> {
     this.execucoes += 1;
-    return trabalho();
+    const restauracoes = this.participantes.map((participante) => participante.capturar());
+    try {
+      const resultado = await trabalho();
+      this.confirmacoes += 1;
+      return resultado;
+    } catch (erro) {
+      restauracoes.forEach((restaurar) => restaurar());
+      throw erro;
+    }
   }
 }

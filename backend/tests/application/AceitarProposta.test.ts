@@ -18,7 +18,7 @@ async function montar(statusProjeto: StatusProjeto = 'ABERTO') {
   await propostas.salvar(Proposta.criar({ ...base, id: 'pr-2', freelancerId: 'f-2', valor: 1200 }));
   const contratos = new InMemoryContratoRepository();
   const notificacoes = new InMemoryNotificationService();
-  const unidadeDeTrabalho = new UnidadeDeTrabalhoFalsa();
+  const unidadeDeTrabalho = new UnidadeDeTrabalhoFalsa(propostas, projetos, contratos);
   const casoDeUso = new AceitarProposta({
     propostas,
     projetos,
@@ -45,6 +45,34 @@ describe('AceitarProposta', () => {
       ['PROPOSTA_ACEITA', 'f-1'],
       ['PROPOSTA_RECUSADA', 'f-2'],
     ]);
+  });
+
+  it('não persiste nada nem notifica quando uma etapa da transação falha', async () => {
+    const c = await montar();
+    c.contratos.salvar = async () => {
+      throw new Error('falha ao salvar');
+    };
+
+    await expect(c.casoDeUso.executar({ propostaId: 'pr-1', usuarioId: 'c-1' })).rejects.toThrow('falha ao salvar');
+
+    expect((await c.propostas.buscarPorId('pr-1'))?.status).toBe('PENDENTE');
+    expect((await c.propostas.buscarPorId('pr-2'))?.status).toBe('PENDENTE');
+    expect((await c.projetos.buscarResumo('p-1'))?.status).toBe('ABERTO');
+    expect(c.contratos.registros.size).toBe(0);
+    expect(c.unidadeDeTrabalho.confirmacoes).toBe(0);
+    expect(c.notificacoes.enviadas).toHaveLength(0);
+  });
+
+  it('notifica somente depois de confirmar a transação', async () => {
+    const c = await montar();
+    const confirmacoesAoNotificar: number[] = [];
+    c.notificacoes.notificar = async () => {
+      confirmacoesAoNotificar.push(c.unidadeDeTrabalho.confirmacoes);
+    };
+
+    await c.casoDeUso.executar({ propostaId: 'pr-1', usuarioId: 'c-1' });
+
+    expect(confirmacoesAoNotificar).toEqual([1, 1]);
   });
 
   it('não desfaz o aceite quando a notificação falha', async () => {

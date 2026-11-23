@@ -5,6 +5,15 @@ import { DadosProposta, Proposta } from '../../../domain/proposta/Proposta';
 export class InMemoryPropostaRepository implements PropostaRepository {
   private readonly registros = new Map<string, DadosProposta>();
 
+  /** Guarda o estado atual e devolve a função que o restaura, para simular rollback nos testes. */
+  capturar(): () => void {
+    const copia = new Map(this.registros);
+    return () => {
+      this.registros.clear();
+      copia.forEach((dados, id) => this.registros.set(id, dados));
+    };
+  }
+
   async salvar(proposta: Proposta): Promise<void> {
     this.registros.set(proposta.id, proposta.paraDados());
   }
