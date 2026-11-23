@@ -7,13 +7,22 @@ import {
   ErroValidacao,
 } from '../../../domain/erros';
 
-function statusDoErro(erro: unknown): number | null {
-  if (erro instanceof ErroValidacao) return 400;
-  if (erro instanceof ErroNaoAutenticado) return 401;
-  if (erro instanceof ErroSemPermissao) return 403;
-  if (erro instanceof ErroNaoEncontrado) return 404;
-  if (erro instanceof ErroConflito) return 409;
+interface ErroHttp {
+  status: number;
+  codigo: string;
+}
+
+function erroHttp(erro: unknown): ErroHttp | null {
+  if (erro instanceof ErroValidacao) return { status: 400, codigo: 'DADOS_INVALIDOS' };
+  if (erro instanceof ErroNaoAutenticado) return { status: 401, codigo: 'NAO_AUTENTICADO' };
+  if (erro instanceof ErroSemPermissao) return { status: 403, codigo: 'SEM_PERMISSAO' };
+  if (erro instanceof ErroNaoEncontrado) return { status: 404, codigo: 'NAO_ENCONTRADO' };
+  if (erro instanceof ErroConflito) return { status: 409, codigo: 'CONFLITO' };
   return null;
+}
+
+function responder(res: Response, status: number, codigo: string, mensagem: string): void {
+  res.status(status).json({ erro: { codigo, mensagem } });
 }
 
 export function tratarErros(erro: unknown, _req: Request, res: Response, next: NextFunction): void {
@@ -21,20 +30,20 @@ export function tratarErros(erro: unknown, _req: Request, res: Response, next: N
     next(erro);
     return;
   }
-  const status = statusDoErro(erro);
-  if (status !== null) {
-    res.status(status).json({ mensagem: (erro as Error).message });
+  const http = erroHttp(erro);
+  if (http) {
+    responder(res, http.status, http.codigo, (erro as Error).message);
     return;
   }
   const tipo = (erro as { type?: string }).type;
   if (tipo === 'entity.parse.failed') {
-    res.status(400).json({ mensagem: 'O corpo da requisição não é um JSON válido.' });
+    responder(res, 400, 'JSON_INVALIDO', 'O corpo da requisição não é um JSON válido.');
     return;
   }
   if (tipo === 'entity.too.large') {
-    res.status(413).json({ mensagem: 'O corpo da requisição é grande demais.' });
+    responder(res, 413, 'CORPO_MUITO_GRANDE', 'O corpo da requisição é grande demais.');
     return;
   }
   console.error(erro);
-  res.status(500).json({ mensagem: 'Erro interno do servidor.' });
+  responder(res, 500, 'ERRO_INTERNO', 'Erro interno do servidor.');
 }

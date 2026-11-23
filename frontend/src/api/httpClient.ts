@@ -48,7 +48,7 @@ export async function requisitar<T>(caminho: string, { method = 'GET', body }: O
       removerSessao();
       aoExpirarSessao();
     }
-    throw new ErroApi(resposta.status, dados?.mensagem ?? 'Não foi possível concluir a operação.');
+    throw new ErroApi(resposta.status, dados?.erro?.mensagem ?? dados?.mensagem ?? 'Não foi possível concluir a operação.');
   }
   return dados as T;
 }

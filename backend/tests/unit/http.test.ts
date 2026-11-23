@@ -45,7 +45,7 @@ describe('POST /usuarios', () => {
     await request(app).post('/usuarios').send(corpo);
     const res = await request(app).post('/usuarios').send(corpo);
     expect(res.status).toBe(409);
-    expect(res.body.mensagem).toEqual(expect.any(String));
+    expect(res.body.erro.mensagem).toEqual(expect.any(String));
   });
 
   it('retorna 400 para perfil Administrador', async () => {
@@ -64,7 +64,7 @@ describe('POST /usuarios', () => {
   it('retorna 400 para JSON inválido', async () => {
     const res = await request(app).post('/usuarios').set('Content-Type', 'application/json').send('{quebrado');
     expect(res.status).toBe(400);
-    expect(res.body.mensagem).toEqual(expect.any(String));
+    expect(res.body.erro.mensagem).toEqual(expect.any(String));
   });
 });
 
@@ -81,7 +81,7 @@ describe('POST /sessoes', () => {
     const { app } = montarApp();
     const res = await request(app).post('/sessoes').send({ email: corpo.email, senha: 'errada-123' });
     expect(res.status).toBe(401);
-    expect(res.body.mensagem).toEqual(expect.any(String));
+    expect(res.body.erro.mensagem).toEqual(expect.any(String));
   });
 });
 

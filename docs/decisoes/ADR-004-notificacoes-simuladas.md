@@ -17,6 +17,35 @@ Definir a porta de saída `NotificationService` na camada de aplicação e imple
 - O adaptador simulado registra no console o destinatário, o assunto e o corpo da mensagem.
 - Um adaptador real, como `SendGridNotificationAdapter`, pode ser adicionado depois e selecionado por configuração.
 
+### Contrato da porta
+A porta fica em `backend/src/application/ports/NotificationService.ts`:
+
+```ts
+type TipoNotificacao = 'NOVA_PROPOSTA' | 'PROPOSTA_ACEITA' | 'PROPOSTA_RECUSADA' | 'PAGAMENTO_LIBERADO';
+
+interface Notificacao {
+  tipo: TipoNotificacao;
+  destinatarioId: string;
+  projeto: { id: string; titulo: string };
+  detalhes?: Record<string, string | number>;
+}
+
+interface NotificationService {
+  notificar(notificacao: Notificacao): Promise<void>;
+}
+```
+
+| Evento | Caso de uso | Destinatário |
+|---|---|---|
+| `NOVA_PROPOSTA` | `EnviarProposta` | Cliente dono do projeto |
+| `PROPOSTA_ACEITA` | `AceitarProposta` | Freelancer da proposta aceita |
+| `PROPOSTA_RECUSADA` | `AceitarProposta` e `CancelarProjeto` | Freelancers das demais propostas |
+| `PAGAMENTO_LIBERADO` | `LiberarPagamento` | Freelancer do contrato |
+
+O destinatário é identificado pelo id do usuário. Resolver o e-mail a partir do id fica a cargo de um adaptador real, que pode depender do `UsuarioRepository`.
+
+Além do `ConsoleNotificationAdapter`, há o `InMemoryNotificationService`, que guarda as notificações enviadas para que os testes dos casos de uso possam verificá-las sem efeitos colaterais.
+
 ## Alternativas consideradas
 - **Integração real com SendGrid ou SMTP:** demonstraria um envio de verdade, mas adicionaria configuração externa e risco de falha na apresentação sem mostrar nada novo sobre a arquitetura.
 - **Chamada direta à biblioteca de e-mail dentro do caso de uso:** seria mais rápida de escrever, mas acoplaria a camada de aplicação a uma tecnologia, o que contraria o RNF02.
