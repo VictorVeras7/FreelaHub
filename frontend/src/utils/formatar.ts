@@ -6,6 +6,8 @@ export const formatarMoeda = (valor: number): string => moeda.format(valor);
 /** Datas ISO são exibidas pelo dia informado, sem deslocamento de fuso. */
 export const formatarData = (iso: string): string => data.format(new Date(iso));
 
+export const formatarPrazo = (prazo: string | null): string => (prazo ? formatarData(prazo) : 'Sem prazo');
+
 export const hojeIso = (): string => {
   const agora = new Date();
   const mes = String(agora.getMonth() + 1).padStart(2, '0');
