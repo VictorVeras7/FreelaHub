@@ -11,7 +11,15 @@ workspace "FreelaHub: Marketplace de Freelancers" "Modelo C4 do trabalho final d
         servicoEmail = softwareSystem "Serviço de E-mail" "Envia notificações por e-mail (ex.: SendGrid)." "Externo"
 
         freelahub = softwareSystem "FreelaHub" "Plataforma que conecta clientes a freelancers, gerenciando projetos, propostas, contratos e pagamentos." {
-            webapp = container "Aplicação Web" "Interface para clientes, freelancers e administradores." "React + TypeScript" "Browser"
+            webapp = container "Aplicação Web" "Interface para clientes, freelancers e administradores." "React + TypeScript" "Browser" {
+                roteamento = component "Roteamento e Guardas" "Define as rotas e restringe o acesso por perfil." "React Router"
+                sessao = component "Sessão" "Mantém o usuário logado e o token JWT." "React Context"
+                paginasAutenticacao = component "Páginas de Autenticação" "Login e cadastro." "React"
+                paginasProjetos = component "Páginas de Projetos" "Projetos abertos, detalhe, novo projeto e meus projetos." "React"
+                paginasPropostas = component "Páginas de Propostas" "Envio de proposta e propostas recebidas." "React"
+                paginasContratos = component "Páginas de Contratos" "Contratos, pagamento e confirmação de entrega." "React"
+                clienteApi = component "Cliente da API" "Portas por recurso com adaptadores HTTP e simulado." "TypeScript + fetch"
+            }
             api = container "API Backend" "Regras de negócio do marketplace, organizada em Arquitetura Hexagonal (domínio + portas + adaptadores)." "Node.js + Express + TypeScript" {
                 # Fatia RF04 e RF07: propostas e notificações
                 rotasPropostas = component "Rotas de Propostas" "POST e GET /projetos/{id}/propostas. Converte HTTP em chamadas aos casos de uso." "Express Router" "Adaptador"
@@ -24,6 +32,18 @@ workspace "FreelaHub: Marketplace de Freelancers" "Modelo C4 do trabalho final d
                 postgresPropostaRepository = component "PostgresPropostaRepository" "Implementa PropostaRepository sobre a tabela propostas." "pg" "Adaptador"
                 postgresProjetoConsulta = component "PostgresProjetoConsulta" "Implementa ProjetoConsulta sobre a tabela projetos." "pg" "Adaptador"
                 consoleNotification = component "ConsoleNotificationAdapter" "Implementa NotificationService registrando destinatário, assunto e corpo no console." "TypeScript" "Adaptador"
+
+                # Fatia RF05: aceite de proposta e contratos
+                contratoController = component "ContratoController" "Recebe POST /propostas/{id}/aceite, GET /contratos e GET /contratos/{id}." "Express" "RF05,AdaptadorEntrada"
+                aceitarProposta = component "AceitarProposta" "Aceita a proposta, recusa as demais, inicia o projeto e gera o contrato em uma transação." "TypeScript" "RF05,Aplicacao"
+                consultarContratos = component "ConsultarContratos" "Lista e detalha contratos do usuário participante." "TypeScript" "RF05,Aplicacao"
+                contrato = component "Contrato" "Entidade de domínio com o ciclo de vida ATIVO e CONCLUÍDO." "TypeScript" "RF05,Dominio"
+                contratoRepository = component "ContratoRepository" "Porta de saída para persistência de contratos." "Interface TypeScript" "RF05,Porta"
+                unidadeDeTrabalho = component "UnidadeDeTrabalho" "Porta de saída para execução transacional." "Interface TypeScript" "RF05,Porta"
+                projetoInicio = component "ProjetoInicio" "Porta de saída para a transição de ABERTO para EM_ANDAMENTO." "Interface TypeScript" "RF05,Porta"
+                postgresContratoRepository = component "PostgresContratoRepository" "Implementa ContratoRepository com SQL." "node-postgres" "RF05,AdaptadorSaida"
+                postgresUnidadeDeTrabalho = component "PostgresUnidadeDeTrabalho" "Implementa UnidadeDeTrabalho com transações do PostgreSQL." "node-postgres" "RF05,AdaptadorSaida"
+                postgresProjetoInicio = component "PostgresProjetoInicio" "Implementa ProjetoInicio com atualização condicional." "node-postgres" "RF05,AdaptadorSaida"
 
                 # Fatia RF01: adaptadores de entrada
                 usuariosController = component "UsuariosController" "POST /usuarios: converte a requisição em chamada ao caso de uso Cadastrar." "Express Router" "RF01,AdaptadorEntrada"
@@ -89,6 +109,44 @@ workspace "FreelaHub: Marketplace de Freelancers" "Modelo C4 do trabalho final d
         freelahub.api.postgresProjetoConsulta -> freelahub.db "Lê projetos" "SQL"
         freelahub.api.consoleNotification -> servicoEmail "Simula o envio (mensagem registrada no console)"
 
+        # Relações da Aplicação Web
+        cliente -> freelahub.webapp.paginasProjetos "Publica e acompanha projetos" "HTTPS"
+        freelancer -> freelahub.webapp.paginasProjetos "Busca projetos" "HTTPS"
+        freelahub.webapp.roteamento -> freelahub.webapp.sessao "Consulta perfil e token"
+        freelahub.webapp.roteamento -> freelahub.webapp.paginasAutenticacao "Renderiza"
+        freelahub.webapp.roteamento -> freelahub.webapp.paginasProjetos "Renderiza"
+        freelahub.webapp.roteamento -> freelahub.webapp.paginasPropostas "Renderiza"
+        freelahub.webapp.roteamento -> freelahub.webapp.paginasContratos "Renderiza"
+        freelahub.webapp.paginasAutenticacao -> freelahub.webapp.sessao "Inicia e encerra a sessão"
+        freelahub.webapp.paginasAutenticacao -> freelahub.webapp.clienteApi "Usa"
+        freelahub.webapp.paginasProjetos -> freelahub.webapp.clienteApi "Usa"
+        freelahub.webapp.paginasPropostas -> freelahub.webapp.clienteApi "Usa"
+        freelahub.webapp.paginasContratos -> freelahub.webapp.clienteApi "Usa"
+        freelahub.webapp.clienteApi -> freelahub.webapp.sessao "Obtém o token"
+        freelahub.webapp.clienteApi -> freelahub.api "Faz requisições" "JSON/HTTPS (REST) + JWT"
+
+        # Relações da fatia RF05
+        freelahub.webapp.clienteApi -> freelahub.api.contratoController "Aceita propostas e consulta contratos" "JSON/HTTPS (REST) + JWT"
+        freelahub.api.contratoController -> freelahub.api.authMiddleware "Protege as rotas"
+        freelahub.api.contratoController -> freelahub.api.errorMiddleware "Encaminha erros"
+        freelahub.api.contratoController -> freelahub.api.aceitarProposta "Executa"
+        freelahub.api.contratoController -> freelahub.api.consultarContratos "Executa"
+        freelahub.api.aceitarProposta -> freelahub.api.contrato "Gera"
+        freelahub.api.aceitarProposta -> freelahub.api.proposta "Aceita e recusa"
+        freelahub.api.aceitarProposta -> freelahub.api.contratoRepository "Salva o contrato"
+        freelahub.api.aceitarProposta -> freelahub.api.unidadeDeTrabalho "Executa em transação"
+        freelahub.api.aceitarProposta -> freelahub.api.propostaRepository "Atualiza propostas"
+        freelahub.api.aceitarProposta -> freelahub.api.projetoConsulta "Consulta dono e status"
+        freelahub.api.aceitarProposta -> freelahub.api.projetoInicio "Inicia o projeto"
+        freelahub.api.aceitarProposta -> freelahub.api.notificationService "Notifica freelancers"
+        freelahub.api.consultarContratos -> freelahub.api.contratoRepository "Consulta"
+        freelahub.api.postgresContratoRepository -> freelahub.api.contratoRepository "Implementa"
+        freelahub.api.postgresUnidadeDeTrabalho -> freelahub.api.unidadeDeTrabalho "Implementa"
+        freelahub.api.postgresProjetoInicio -> freelahub.api.projetoInicio "Implementa"
+        freelahub.api.postgresContratoRepository -> freelahub.db "Lê e grava contratos" "SQL"
+        freelahub.api.postgresUnidadeDeTrabalho -> freelahub.db "Controla transações" "SQL"
+        freelahub.api.postgresProjetoInicio -> freelahub.db "Atualiza o status do projeto" "SQL"
+
         # Relações da fatia RF01
         freelahub.webapp -> freelahub.api.usuariosController "Cadastra usuário" "JSON/HTTP"
         freelahub.webapp -> freelahub.api.sessoesController "Faz login" "JSON/HTTP"
@@ -142,6 +200,21 @@ workspace "FreelaHub: Marketplace de Freelancers" "Modelo C4 do trabalho final d
             include freelahub.api.postgresPropostaRepository freelahub.api.postgresProjetoConsulta freelahub.api.consoleNotification
             autolayout lr
             description "Diagrama de Componentes (C4 nível 3) da API: fatia de propostas e notificações (RF04 e RF07)."
+        }
+
+        component freelahub.webapp "ComponentesWeb" {
+            include *
+            autolayout lr
+            description "Diagrama de Componentes (C4 nível 3) da Aplicação Web."
+        }
+
+        component freelahub.api "RF05_Componentes" {
+            include element.tag==RF05
+            include freelahub.api.proposta freelahub.api.propostaRepository freelahub.api.projetoConsulta freelahub.api.notificationService
+            include freelahub.api.authMiddleware freelahub.api.errorMiddleware
+            include freelahub.webapp freelahub.db
+            autolayout tb
+            description "Diagrama de Componentes (C4 nível 3) da fatia RF05: aceite de proposta e contratos."
         }
 
         component freelahub.api "RF01_Componentes" {

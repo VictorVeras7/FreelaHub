@@ -11,6 +11,7 @@ import { ListarPropostasDoProjeto } from '../../src/application/casos-de-uso/Lis
 import { PerfilUsuario } from '../../src/application/Solicitante';
 import { Autenticar } from '../../src/application/usecases/Autenticar';
 import { Cadastrar } from '../../src/application/usecases/Cadastrar';
+import { Usuario } from '../../src/domain/Usuario';
 import { InMemoryProjetoConsulta } from '../fakes/InMemoryProjetoConsulta';
 
 /** Substitui o middleware JWT: identifica o usuário pelos cabeçalhos de teste. */
@@ -34,7 +35,7 @@ function montarApp() {
     rotasAdicionais: [
       criarRotasDePropostas({
         enviarProposta: new EnviarProposta(projetos, propostas, notificacoes, randomUUID),
-        listarPropostasDoProjeto: new ListarPropostasDoProjeto(projetos, propostas),
+        listarPropostasDoProjeto: new ListarPropostasDoProjeto(projetos, propostas, { buscarPorId: async (id: string) => ({ id, nome: `Nome ${id}` }) as Usuario }),
         autenticar: autenticacaoDeTeste,
       }),
     ],
@@ -67,6 +68,6 @@ describe('Rotas de propostas', () => {
       .set('x-usuario-perfil', 'CLIENTE');
 
     expect(listagem.status).toBe(200);
-    expect(listagem.body).toEqual([criacao.body]);
+    expect(listagem.body).toEqual([{ ...criacao.body, freelancerNome: 'Nome freelancer-1' }]);
   });
 });
