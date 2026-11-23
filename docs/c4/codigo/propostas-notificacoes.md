@@ -60,7 +60,7 @@ classDiagram
             GET /projetos/:id/propostas
         }
         class PostgresPropostaRepository
-        class PostgresProjetoConsulta
+        class PostgresProjetoRepository
         class ConsoleNotificationAdapter
         class InMemoryPropostaRepository
         class InMemoryNotificationService
@@ -78,7 +78,7 @@ classDiagram
 
     PostgresPropostaRepository ..|> PropostaRepository
     InMemoryPropostaRepository ..|> PropostaRepository
-    PostgresProjetoConsulta ..|> ProjetoConsulta
+    PostgresProjetoRepository ..|> ProjetoConsulta
     ConsoleNotificationAdapter ..|> NotificationService
     InMemoryNotificationService ..|> NotificationService
 ```
@@ -95,8 +95,8 @@ classDiagram
 | `NotificationService` | Aplicação (porta de saída) | `backend/src/application/ports/NotificationService.ts` |
 | Rotas de propostas | Adaptador de entrada | `backend/src/adapters/in/http/rotas/propostas.ts` |
 | `PostgresPropostaRepository` | Adaptador de saída | `backend/src/adapters/out/persistence/PostgresPropostaRepository.ts` |
-| `PostgresProjetoConsulta` | Adaptador de saída | `backend/src/adapters/out/persistence/PostgresProjetoConsulta.ts` |
+| `PostgresProjetoRepository` | Adaptador de saída (fatia RF02/RF03) | `backend/src/adapters/out/persistence/PostgresProjetoRepository.ts` |
 | `ConsoleNotificationAdapter` | Adaptador de saída | `backend/src/adapters/out/notification/ConsoleNotificationAdapter.ts` |
 | `InMemory*` | Adaptadores de saída para testes | `backend/src/adapters/out/memoria/` |
 
-`ProjetoConsulta` é uma porta estreita de leitura: a fatia de propostas precisa apenas do dono, do título e do status do projeto. O repositório de projetos da fatia RF02/RF03 pode implementá-la e substituir o `PostgresProjetoConsulta`.
+`ProjetoConsulta` é uma porta estreita de leitura: a fatia de propostas precisa apenas do dono, do título e do status do projeto. Ela é implementada pelos repositórios de projetos da fatia RF02/RF03 ([diagrama](projetos.md)), que substituíram o `PostgresProjetoConsulta`.

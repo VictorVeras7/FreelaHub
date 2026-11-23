@@ -30,7 +30,6 @@ workspace "FreelaHub: Marketplace de Freelancers" "Modelo C4 do trabalho final d
                 projetoConsulta = component "ProjetoConsulta" "Porta de saída de leitura do dono, título e status do projeto." "Interface TypeScript" "Porta"
                 notificationService = component "NotificationService" "Porta de saída para notificações de eventos do fluxo." "Interface TypeScript" "Porta"
                 postgresPropostaRepository = component "PostgresPropostaRepository" "Implementa PropostaRepository sobre a tabela propostas." "pg" "Adaptador"
-                postgresProjetoConsulta = component "PostgresProjetoConsulta" "Implementa ProjetoConsulta sobre a tabela projetos." "pg" "Adaptador"
                 consoleNotification = component "ConsoleNotificationAdapter" "Implementa NotificationService registrando destinatário, assunto e corpo no console." "TypeScript" "Adaptador"
 
                 # Fatia RF05: aceite de proposta e contratos
@@ -68,6 +67,21 @@ workspace "FreelaHub: Marketplace de Freelancers" "Modelo C4 do trabalho final d
                 seedAdministrador = component "SeedAdministrador" "Carga inicial idempotente do Administrador." "pg" "RF01,AdaptadorSaida"
                 jwtTokenService = component "JwtTokenService" "Emite e verifica JWT HS256 com expiração de 1 hora." "jsonwebtoken" "RF01,AdaptadorSaida,Codigo"
                 bcryptSenhaHasher = component "BcryptSenhaHasher" "Gera e compara hashes bcrypt." "bcryptjs" "RF01,AdaptadorSaida,Codigo"
+
+                # Fatia RF02 e RF03: projetos
+                rotasProjetos = component "Rotas de Projetos" "POST e GET /projetos, GET /projetos/meus, GET /projetos/{id} e POST /projetos/{id}/cancelamento." "Express Router" "RF02,AdaptadorEntrada,RF02Codigo"
+                publicarProjeto = component "PublicarProjeto" "Caso de uso: somente Cliente publica; o projeto nasce ABERTO (RF02)." "Caso de uso" "RF02,Aplicacao,RF02Codigo"
+                cancelarProjeto = component "CancelarProjeto" "Caso de uso: o dono cancela projeto ABERTO e as propostas PENDENTES viram RECUSADA (RF02, RN07)." "Caso de uso" "RF02,Aplicacao,RF02Codigo"
+                listarProjetos = component "ListarProjetos" "Caso de uso: lista somente projetos ABERTO, com filtros de habilidade e faixa de orçamento (RF03)." "Caso de uso" "RF02,Aplicacao,RF02Codigo"
+                listarMeusProjetos = component "ListarMeusProjetos" "Caso de uso: projetos do cliente autenticado, em qualquer status." "Caso de uso" "RF02,Aplicacao,RF02Codigo"
+                obterProjeto = component "ObterProjeto" "Caso de uso: detalhe de um projeto pelo id (RF03)." "Caso de uso" "RF02,Aplicacao,RF02Codigo"
+                projetoRepository = component "ProjetoRepository" "Porta de saída: salvar, buscarPorId, listarAbertos e listarPorCliente." "Interface" "RF02,Porta,RF02Codigo"
+                postgresProjetoRepository = component "PostgresProjetoRepository" "Implementa ProjetoRepository e ProjetoConsulta sobre a tabela projetos." "pg" "RF02,AdaptadorSaida,RF02Codigo"
+                inMemoryProjetoRepository = component "InMemoryProjetoRepository" "Implementa ProjetoRepository e ProjetoConsulta em memória, para os testes sem banco (RNF07)." "TypeScript" "RF02,AdaptadorSaida,RF02Codigo,SomenteCodigo"
+
+                # Fatia RF02 e RF03: domínio (visão de Código)
+                projeto = component "Projeto" "Entidade com cliente, título, descrição, orçamento, prazo desejado, habilidades e status. Transições: cancelar, iniciar e concluir." "Classe de domínio" "RF02,Dominio,RF02Codigo,SomenteCodigo"
+                statusProjeto = component "StatusProjeto" "Enumeração: ABERTO, EM_ANDAMENTO, CONCLUIDO e CANCELADO." "Tipo de domínio" "RF02,Dominio,RF02Codigo,SomenteCodigo"
             }
             db = container "Banco de Dados" "Armazena usuários, projetos, propostas, contratos e pagamentos." "PostgreSQL" "Database"
         }
@@ -103,10 +117,8 @@ workspace "FreelaHub: Marketplace de Freelancers" "Modelo C4 do trabalho final d
         freelahub.api.listarPropostas -> freelahub.api.projetoConsulta "Verifica o dono do projeto"
         freelahub.api.listarPropostas -> freelahub.api.propostaRepository "Lista por projeto"
         freelahub.api.postgresPropostaRepository -> freelahub.api.propostaRepository "Implementa"
-        freelahub.api.postgresProjetoConsulta -> freelahub.api.projetoConsulta "Implementa"
         freelahub.api.consoleNotification -> freelahub.api.notificationService "Implementa"
         freelahub.api.postgresPropostaRepository -> freelahub.db "Lê e grava propostas" "SQL"
-        freelahub.api.postgresProjetoConsulta -> freelahub.db "Lê projetos" "SQL"
         freelahub.api.consoleNotification -> servicoEmail "Simula o envio (mensagem registrada no console)"
 
         # Relações da Aplicação Web
@@ -176,6 +188,39 @@ workspace "FreelaHub: Marketplace de Freelancers" "Modelo C4 do trabalho final d
         freelahub.api.seedAdministrador -> freelahub.api.usuario "Valida"
         freelahub.api.postgresUsuarioRepository -> freelahub.db "Lê e grava usuários" "SQL"
         freelahub.api.seedAdministrador -> freelahub.db "Insere Administrador" "SQL"
+
+        # Relações da fatia RF02 e RF03
+        freelahub.webapp.clienteApi -> freelahub.api.rotasProjetos "Publica, lista, detalha e cancela projetos" "JSON/HTTPS (REST) + JWT"
+        freelahub.api.rotasProjetos -> freelahub.api.authMiddleware "Exige token"
+        freelahub.api.rotasProjetos -> freelahub.api.errorMiddleware "Encaminha erros"
+        freelahub.api.rotasProjetos -> freelahub.api.publicarProjeto "Executa"
+        freelahub.api.rotasProjetos -> freelahub.api.cancelarProjeto "Executa"
+        freelahub.api.rotasProjetos -> freelahub.api.listarProjetos "Executa"
+        freelahub.api.rotasProjetos -> freelahub.api.listarMeusProjetos "Executa"
+        freelahub.api.rotasProjetos -> freelahub.api.obterProjeto "Executa"
+        freelahub.api.publicarProjeto -> freelahub.api.projeto "Cria"
+        freelahub.api.publicarProjeto -> freelahub.api.projetoRepository "Salva"
+        freelahub.api.cancelarProjeto -> freelahub.api.projeto "Cancela"
+        freelahub.api.cancelarProjeto -> freelahub.api.projetoRepository "Busca e salva"
+        freelahub.api.cancelarProjeto -> freelahub.api.propostaRepository "Recusa as propostas pendentes"
+        freelahub.api.cancelarProjeto -> freelahub.api.unidadeDeTrabalho "Grava projeto e propostas em uma transação"
+        freelahub.api.listarProjetos -> freelahub.api.projetoRepository "Lista abertos com filtros"
+        freelahub.api.listarMeusProjetos -> freelahub.api.projetoRepository "Lista por cliente"
+        freelahub.api.obterProjeto -> freelahub.api.projetoRepository "Busca por id"
+        freelahub.api.publicarProjeto -> freelahub.api.usuarioRepository "Lê o nome do cliente"
+        freelahub.api.cancelarProjeto -> freelahub.api.usuarioRepository "Lê o nome do cliente"
+        freelahub.api.listarProjetos -> freelahub.api.usuarioRepository "Lê o nome do cliente"
+        freelahub.api.listarMeusProjetos -> freelahub.api.usuarioRepository "Lê o nome do cliente"
+        freelahub.api.obterProjeto -> freelahub.api.usuarioRepository "Lê o nome do cliente"
+        freelahub.api.projeto -> freelahub.api.statusProjeto "Possui um"
+        freelahub.api.projeto -> freelahub.api.errosDominio "Lança"
+        freelahub.api.projetoRepository -> freelahub.api.projeto "Assinaturas usam"
+        freelahub.api.postgresProjetoRepository -> freelahub.api.projetoRepository "Implementa"
+        freelahub.api.postgresProjetoRepository -> freelahub.api.projetoConsulta "Implementa"
+        freelahub.api.postgresProjetoRepository -> freelahub.api.projeto "Mapeia"
+        freelahub.api.postgresProjetoRepository -> freelahub.db "Lê e grava projetos" "SQL"
+        freelahub.api.inMemoryProjetoRepository -> freelahub.api.projetoRepository "Implementa"
+        freelahub.api.inMemoryProjetoRepository -> freelahub.api.projetoConsulta "Implementa"
     }
 
     views {
@@ -197,7 +242,7 @@ workspace "FreelaHub: Marketplace de Freelancers" "Modelo C4 do trabalho final d
             include freelahub.webapp freelahub.db servicoEmail
             include freelahub.api.rotasPropostas freelahub.api.enviarProposta freelahub.api.listarPropostas freelahub.api.proposta
             include freelahub.api.propostaRepository freelahub.api.projetoConsulta freelahub.api.notificationService
-            include freelahub.api.postgresPropostaRepository freelahub.api.postgresProjetoConsulta freelahub.api.consoleNotification
+            include freelahub.api.postgresPropostaRepository freelahub.api.postgresProjetoRepository freelahub.api.consoleNotification
             autolayout lr
             description "Diagrama de Componentes (C4 nível 3) da API: fatia de propostas e notificações (RF04 e RF07)."
         }
@@ -229,6 +274,23 @@ workspace "FreelaHub: Marketplace de Freelancers" "Modelo C4 do trabalho final d
             include element.tag==Codigo
             autolayout tb
             description "Visão de Código (C4 nível 4) da fatia RF01: classes de domínio, casos de uso, portas e adaptadores."
+        }
+
+        component freelahub.api "RF02_Componentes" {
+            include element.tag==RF02
+            exclude element.tag==SomenteCodigo
+            include freelahub.webapp freelahub.db
+            include freelahub.api.authMiddleware freelahub.api.errorMiddleware
+            include freelahub.api.usuarioRepository freelahub.api.propostaRepository freelahub.api.projetoConsulta freelahub.api.unidadeDeTrabalho
+            autolayout lr
+            description "Diagrama de Componentes (C4 nível 3) da API: fatia de projetos (RF02 e RF03)."
+        }
+
+        component freelahub.api "RF02_Codigo" {
+            include element.tag==RF02Codigo
+            include freelahub.api.errosDominio freelahub.api.usuarioRepository freelahub.api.propostaRepository freelahub.api.projetoConsulta freelahub.api.unidadeDeTrabalho
+            autolayout tb
+            description "Visão de Código (C4 nível 4) da fatia RF02/RF03: classe Projeto, enum de status, casos de uso, porta e adaptadores."
         }
 
         styles {
