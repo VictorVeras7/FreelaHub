@@ -1,7 +1,5 @@
-import { LogOut } from 'lucide-react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import type { Perfil } from '@/api/ports';
-import { Botao } from '@/components/Botao';
 import { Marca } from '@/components/Marca';
 import { useSessao } from '@/features/sessao/SessaoContext';
 import { ROTULO_PERFIL } from '@/utils/status';
@@ -30,37 +28,36 @@ export function Layout() {
   };
 
   return (
-    <div className="min-h-screen">
-      <header className="sticky top-0 z-30 border-b border-borda/80 bg-superficie/75 backdrop-blur-lg">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
+    <div className="min-h-screen bg-neutro-suave">
+      <header className="sticky top-0 z-30 bg-white">
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3 sm:px-8">
           <Marca />
-          <nav aria-label="Navegação principal" className="order-3 -mx-1 flex w-full gap-1 overflow-x-auto px-1 md:order-none md:w-auto">
+          <nav aria-label="Navegação principal" className="order-3 flex w-full gap-1 overflow-x-auto rounded-full bg-neutro-suave p-1 md:order-none md:ml-auto md:w-auto">
             {NAVEGACAO[usuario.perfil].map((item) => (
               <NavLink
                 key={item.para}
                 to={item.para}
                 end
                 className={({ isActive }) =>
-                  `whitespace-nowrap rounded-full px-3 py-1.5 font-medium transition ${isActive ? 'bg-primaria-suave text-primaria-forte' : 'text-texto-suave hover:bg-neutro-suave hover:text-texto'}`
+                  `whitespace-nowrap rounded-full px-3 py-1.5 text-[0.8125rem] font-semibold uppercase transition-colors ${isActive ? 'bg-white text-black' : 'text-texto-suave hover:text-black'}`
                 }
               >
                 {item.rotulo}
               </NavLink>
             ))}
           </nav>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="flex items-center gap-4">
             <div className="text-right leading-tight">
-              <p className="max-w-40 truncate font-semibold">{usuario.nome}</p>
+              <p className="max-w-40 truncate text-[0.8125rem] font-semibold uppercase">{usuario.nome}</p>
               <p className="text-detalhe text-texto-suave">{ROTULO_PERFIL[usuario.perfil]}</p>
             </div>
-            <Botao variante="fantasma" onClick={encerrar} className="px-3">
-              <LogOut className="h-4 w-4" aria-hidden />
+            <button type="button" onClick={encerrar} className="text-[0.8125rem] font-semibold uppercase underline-offset-4 hover:underline">
               Sair
-            </Botao>
+            </button>
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-4 py-8">
+      <main className="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-8">
         <Outlet />
       </main>
     </div>

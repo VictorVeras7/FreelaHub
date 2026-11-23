@@ -32,7 +32,7 @@ export function ProjetosAbertos() {
   return (
     <>
       <CabecalhoPagina titulo="Projetos abertos" descricao="Encontre um projeto e envie sua proposta." />
-      <Cartao className="mb-6 p-4">
+      <Cartao className="mb-7 p-4">
         <form onSubmit={aplicar} className="grid items-end gap-3 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_auto]">
           <Campo rotulo="Habilidade" placeholder="Ex.: React" value={habilidade} onChange={(e) => setHabilidade(e.target.value)} />
           <Campo rotulo="Orçamento mínimo" type="number" min="0" step="0.01" value={minimo} onChange={(e) => setMinimo(e.target.value)} />
@@ -48,7 +48,7 @@ export function ProjetosAbertos() {
       ) : consulta.data.length === 0 ? (
         <EstadoVazio titulo="Nenhum projeto aberto com esses filtros." descricao="Ajuste a habilidade ou a faixa de orçamento." />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {consulta.data.map((projeto) => <CartaoProjeto key={projeto.id} projeto={projeto} />)}
         </div>
       )}

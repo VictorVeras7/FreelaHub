@@ -4,6 +4,7 @@ import { Contrato } from '@/pages/Contrato';
 import { Contratos } from '@/pages/Contratos';
 import { DetalheProjeto } from '@/pages/DetalheProjeto';
 import { EnviarProposta } from '@/pages/EnviarProposta';
+import { Inicio } from '@/pages/Inicio';
 import { Login } from '@/pages/Login';
 import { MeusProjetos } from '@/pages/MeusProjetos';
 import { NovoProjeto } from '@/pages/NovoProjeto';
@@ -15,6 +16,7 @@ import { Layout } from './Layout';
 export function Rotas() {
   return (
     <Routes>
+      <Route path="/" element={<Inicio />} />
       <Route element={<RotaPublica />}>
         <Route path="/login" element={<Login />} />
         <Route path="/cadastro" element={<Cadastro />} />

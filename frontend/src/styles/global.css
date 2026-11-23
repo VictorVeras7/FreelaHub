@@ -3,36 +3,36 @@
 @tailwind utilities;
 
 :root {
-  --cor-primaria: 67 56 202;
-  --cor-primaria-forte: 55 48 163;
-  --cor-violeta: 124 58 237;
-  --cor-secundaria: 224 231 255;
-  --cor-fundo: 248 250 252;
+  --cor-primaria: 0 0 0;
+  --cor-secundaria: 244 244 244;
+  --cor-oliva: 53 52 32;
+  --cor-fundo: 255 255 255;
   --cor-superficie: 255 255 255;
-  --cor-texto: 15 23 42;
-  --cor-texto-suave: 71 85 105;
-  --cor-borda: 226 232 240;
-  --cor-neutro-suave: 241 245 249;
-  --cor-sucesso: 21 128 61;
-  --cor-sucesso-suave: 220 252 231;
-  --cor-alerta: 180 83 9;
-  --cor-alerta-suave: 254 243 199;
-  --cor-erro: 185 28 28;
-  --cor-erro-suave: 254 226 226;
+  --cor-texto: 0 0 0;
+  --cor-texto-suave: 82 82 82;
+  --cor-borda: 214 214 214;
+  --cor-sucesso: 22 101 52;
+  --cor-sucesso-suave: 225 240 228;
+  --cor-alerta: 133 77 14;
+  --cor-alerta-suave: 248 238 214;
+  --cor-erro: 170 28 28;
+  --cor-erro-suave: 250 228 228;
+  --altura-cabecalho: 4.5rem;
 }
 
 @layer base {
   html {
-    @apply bg-fundo text-corpo text-texto antialiased;
-    font-family: 'Inter Variable', system-ui, sans-serif;
-    font-feature-settings: 'cv11', 'ss03';
+    @apply bg-fundo font-sans text-corpo text-texto antialiased;
+    scroll-behavior: smooth;
+    scroll-padding-top: var(--altura-cabecalho);
   }
   body {
     min-height: 100vh;
-    background-image:
-      radial-gradient(60rem 22rem at 85% -8rem, rgb(var(--cor-violeta) / 0.09), transparent 70%),
-      radial-gradient(50rem 20rem at 5% -8rem, rgb(var(--cor-primaria) / 0.08), transparent 70%);
-    background-repeat: no-repeat;
+    overflow-x: clip;
+  }
+  h1 {
+    @apply font-display uppercase;
+    font-weight: 400;
   }
   :focus-visible {
     outline: 2px solid rgb(var(--cor-primaria));
@@ -41,15 +41,31 @@
 }
 
 @layer components {
-  .gradiente-marca {
-    background-image: linear-gradient(135deg, rgb(var(--cor-primaria)), rgb(var(--cor-violeta)));
-  }
   .numeros {
     font-variant-numeric: tabular-nums;
+  }
+  .rotulo {
+    @apply text-detalhe font-semibold uppercase;
+    letter-spacing: 0.02em;
+  }
+  .letreiro {
+    @apply block whitespace-nowrap font-display uppercase;
+    font-size: calc((100vw - 3rem) / 3.97);
+    line-height: 0.92;
+    letter-spacing: -0.012em;
+  }
+}
+
+@media (min-width: 640px) {
+  .letreiro {
+    font-size: calc((100vw - 5rem) / 3.97);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
   *,
   *::before,
   *::after {

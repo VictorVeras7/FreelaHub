@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { api } from '@/api';
 import { ApiError, mensagemDoErro } from '@/api/ApiError';
@@ -30,7 +30,10 @@ const TIPOS = [
 export function Cadastro() {
   const navegar = useNavigate();
   const [erro, setErro] = useState('');
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<Dados>({ resolver: zodResolver(esquema) });
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<Dados>({
+    resolver: zodResolver(esquema),
+    defaultValues: { perfil: (useLocation().state as { perfil?: Dados['perfil'] } | null)?.perfil },
+  });
 
   const enviar = async ({ nome, email, senha, perfil }: Dados) => {
     setErro('');
@@ -70,7 +73,7 @@ export function Cadastro() {
         <Botao type="submit" className="w-full" carregando={isSubmitting}>Criar conta</Botao>
       </form>
       <p className="mt-5 text-center text-texto-suave">
-        Já tem conta? <Link to="/login" className="font-semibold text-primaria hover:underline">Entrar</Link>
+        Já tem conta? <Link to="/login" className="font-semibold text-black underline underline-offset-4">Entrar</Link>
       </p>
     </LayoutAutenticacao>
   );
