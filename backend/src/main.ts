@@ -3,11 +3,12 @@ import { Pool } from 'pg';
 import { criarApp } from './adapters/in/http/app';
 import { criarContratoController } from './adapters/in/http/ContratoController';
 import { autenticar as middlewareAutenticar } from './adapters/in/http/authMiddleware';
+import { criarRotasDeProjetos } from './adapters/in/http/rotas/projetos';
 import { criarRotasDePropostas } from './adapters/in/http/rotas/propostas';
 import { ConsoleNotificationAdapter } from './adapters/out/notification/ConsoleNotificationAdapter';
 import { PostgresContratoRepository } from './adapters/out/persistence/PostgresContratoRepository';
-import { PostgresProjetoConsulta } from './adapters/out/persistence/PostgresProjetoConsulta';
 import { PostgresProjetoInicio } from './adapters/out/persistence/PostgresProjetoInicio';
+import { PostgresProjetoRepository } from './adapters/out/persistence/PostgresProjetoRepository';
 import { PostgresPropostaRepository } from './adapters/out/persistence/PostgresPropostaRepository';
 import { PostgresUnidadeDeTrabalho } from './adapters/out/persistence/PostgresUnidadeDeTrabalho';
 import { PostgresUsuarioRepository } from './adapters/out/persistence/PostgresUsuarioRepository';
@@ -16,9 +17,14 @@ import { carregarAdministrador } from './adapters/out/persistence/seedAdministra
 import { BcryptSenhaHasher } from './adapters/out/security/BcryptSenhaHasher';
 import { JwtTokenService } from './adapters/out/security/JwtTokenService';
 import { AceitarProposta } from './application/casos-de-uso/AceitarProposta';
+import { CancelarProjeto } from './application/casos-de-uso/CancelarProjeto';
 import { ConsultarContratos } from './application/casos-de-uso/ConsultarContratos';
 import { EnviarProposta } from './application/casos-de-uso/EnviarProposta';
+import { ListarMeusProjetos } from './application/casos-de-uso/ListarMeusProjetos';
+import { ListarProjetos } from './application/casos-de-uso/ListarProjetos';
 import { ListarPropostasDoProjeto } from './application/casos-de-uso/ListarPropostasDoProjeto';
+import { ObterProjeto } from './application/casos-de-uso/ObterProjeto';
+import { PublicarProjeto } from './application/casos-de-uso/PublicarProjeto';
 import { Autenticar } from './application/usecases/Autenticar';
 import { Cadastrar } from './application/usecases/Cadastrar';
 import { carregarConfig } from './config';
@@ -30,7 +36,7 @@ async function iniciar(): Promise<void> {
   const tokens = new JwtTokenService(config.jwtSecret, config.jwtExpiracaoSegundos);
   const usuarios = new PostgresUsuarioRepository(pool);
   const unidadeDeTrabalho = new PostgresUnidadeDeTrabalho(pool);
-  const projetos = new PostgresProjetoConsulta(unidadeDeTrabalho.conexao);
+  const projetos = new PostgresProjetoRepository(unidadeDeTrabalho.conexao);
   const propostas = new PostgresPropostaRepository(unidadeDeTrabalho.conexao);
   const contratos = new PostgresContratoRepository(unidadeDeTrabalho.conexao);
   const projetoInicio = new PostgresProjetoInicio(unidadeDeTrabalho.conexao);
@@ -45,6 +51,14 @@ async function iniciar(): Promise<void> {
     cadastrar: new Cadastrar(usuarios, hasher),
     autenticar: new Autenticar(usuarios, hasher, tokens),
     rotasAdicionais: [
+      criarRotasDeProjetos({
+        publicarProjeto: new PublicarProjeto(projetos, usuarios, randomUUID),
+        listarProjetos: new ListarProjetos(projetos, usuarios),
+        listarMeusProjetos: new ListarMeusProjetos(projetos, usuarios),
+        obterProjeto: new ObterProjeto(projetos, usuarios),
+        cancelarProjeto: new CancelarProjeto(projetos, propostas, usuarios),
+        autenticar: autenticacao,
+      }),
       criarRotasDePropostas({
         enviarProposta: new EnviarProposta(projetos, propostas, notificacoes, randomUUID),
         listarPropostasDoProjeto: new ListarPropostasDoProjeto(projetos, propostas, usuarios),
