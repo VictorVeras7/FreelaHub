@@ -1,14 +1,21 @@
 import { RequestHandler, Router } from 'express';
 import { AceitarProposta } from '../../../application/casos-de-uso/AceitarProposta';
+import { ConsultarPagamento } from '../../../application/casos-de-uso/ConsultarPagamento';
 import { ConsultarContratos } from '../../../application/casos-de-uso/ConsultarContratos';
+import { LiberarPagamento } from '../../../application/casos-de-uso/LiberarPagamento';
+import { RealizarPagamento } from '../../../application/casos-de-uso/RealizarPagamento';
 import { ContratoDetalhado } from '../../../application/ports/ContratoRepository';
 import { PerfilUsuario } from '../../../domain/PerfilUsuario';
+import { Pagamento } from '../../../domain/pagamento/Pagamento';
 import { obterSolicitante } from './autenticacao';
 import { autorizar } from './authMiddleware';
 
 export interface DependenciasContratoController {
   aceitarProposta: AceitarProposta;
   consultarContratos: ConsultarContratos;
+  consultarPagamento: ConsultarPagamento;
+  realizarPagamento: RealizarPagamento;
+  liberarPagamento: LiberarPagamento;
   autenticar: RequestHandler;
 }
 
@@ -16,7 +23,12 @@ export function contratoParaJson(contrato: ContratoDetalhado) {
   return { ...contrato, criadoEm: contrato.criadoEm.toISOString() };
 }
 
-/** Adaptador de entrada do RF05: só traduz HTTP para os casos de uso e de volta. */
+export function pagamentoParaJson(pagamento: Pagamento) {
+  const dados = pagamento.paraDados();
+  return { ...dados, atualizadoEm: dados.atualizadoEm.toISOString() };
+}
+
+/** Adaptador de entrada dos RF05 e RF06: só traduz HTTP para os casos de uso e de volta. */
 export function criarContratoController(deps: DependenciasContratoController): Router {
   const rotas = Router();
 
@@ -37,6 +49,31 @@ export function criarContratoController(deps: DependenciasContratoController): R
     const contrato = await deps.consultarContratos.buscar(String(req.params.id), obterSolicitante(req).id);
     res.status(200).json(contratoParaJson(contrato));
   });
+
+  rotas.post(
+    '/contratos/:id/pagamento',
+    deps.autenticar,
+    autorizar(PerfilUsuario.CLIENTE),
+    async (req, res) => {
+      const pagamento = await deps.realizarPagamento.executar(String(req.params.id), obterSolicitante(req).id);
+      res.status(200).json(pagamentoParaJson(pagamento));
+    },
+  );
+
+  rotas.get('/contratos/:id/pagamento', deps.autenticar, async (req, res) => {
+    const pagamento = await deps.consultarPagamento.executar(String(req.params.id), obterSolicitante(req).id);
+    res.status(200).json(pagamentoParaJson(pagamento));
+  });
+
+  rotas.post(
+    '/contratos/:id/confirmacao-entrega',
+    deps.autenticar,
+    autorizar(PerfilUsuario.CLIENTE),
+    async (req, res) => {
+      const pagamento = await deps.liberarPagamento.executar(String(req.params.id), obterSolicitante(req).id);
+      res.status(200).json(pagamentoParaJson(pagamento));
+    },
+  );
 
   return rotas;
 }

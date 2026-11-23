@@ -6,7 +6,9 @@ import { autenticar as middlewareAutenticar } from './adapters/in/http/authMiddl
 import { criarRotasDeProjetos } from './adapters/in/http/rotas/projetos';
 import { criarRotasDePropostas } from './adapters/in/http/rotas/propostas';
 import { ConsoleNotificationAdapter } from './adapters/out/notification/ConsoleNotificationAdapter';
+import { FakePaymentAdapter } from './adapters/out/payment/FakePaymentAdapter';
 import { PostgresContratoRepository } from './adapters/out/persistence/PostgresContratoRepository';
+import { PostgresPagamentoRepository } from './adapters/out/persistence/PostgresPagamentoRepository';
 import { PostgresProjetoInicio } from './adapters/out/persistence/PostgresProjetoInicio';
 import { PostgresProjetoRepository } from './adapters/out/persistence/PostgresProjetoRepository';
 import { PostgresPropostaRepository } from './adapters/out/persistence/PostgresPropostaRepository';
@@ -18,13 +20,16 @@ import { BcryptSenhaHasher } from './adapters/out/security/BcryptSenhaHasher';
 import { JwtTokenService } from './adapters/out/security/JwtTokenService';
 import { AceitarProposta } from './application/casos-de-uso/AceitarProposta';
 import { CancelarProjeto } from './application/casos-de-uso/CancelarProjeto';
+import { ConsultarPagamento } from './application/casos-de-uso/ConsultarPagamento';
 import { ConsultarContratos } from './application/casos-de-uso/ConsultarContratos';
 import { EnviarProposta } from './application/casos-de-uso/EnviarProposta';
 import { ListarMeusProjetos } from './application/casos-de-uso/ListarMeusProjetos';
 import { ListarProjetos } from './application/casos-de-uso/ListarProjetos';
 import { ListarPropostasDoProjeto } from './application/casos-de-uso/ListarPropostasDoProjeto';
+import { LiberarPagamento } from './application/casos-de-uso/LiberarPagamento';
 import { ObterProjeto } from './application/casos-de-uso/ObterProjeto';
 import { PublicarProjeto } from './application/casos-de-uso/PublicarProjeto';
+import { RealizarPagamento } from './application/casos-de-uso/RealizarPagamento';
 import { Autenticar } from './application/usecases/Autenticar';
 import { Cadastrar } from './application/usecases/Cadastrar';
 import { carregarConfig } from './config';
@@ -39,7 +44,9 @@ async function iniciar(): Promise<void> {
   const projetos = new PostgresProjetoRepository(unidadeDeTrabalho.conexao);
   const propostas = new PostgresPropostaRepository(unidadeDeTrabalho.conexao);
   const contratos = new PostgresContratoRepository(unidadeDeTrabalho.conexao);
+  const pagamentos = new PostgresPagamentoRepository(unidadeDeTrabalho.conexao);
   const projetoInicio = new PostgresProjetoInicio(unidadeDeTrabalho.conexao);
+  const gatewayPagamento = new FakePaymentAdapter();
   const notificacoes = new ConsoleNotificationAdapter();
 
   const autenticacao = middlewareAutenticar(tokens);
@@ -75,6 +82,21 @@ async function iniciar(): Promise<void> {
           gerarId: randomUUID,
         }),
         consultarContratos: new ConsultarContratos(contratos),
+        consultarPagamento: new ConsultarPagamento(contratos, pagamentos),
+        realizarPagamento: new RealizarPagamento({
+          contratos,
+          pagamentos,
+          gateway: gatewayPagamento,
+          unidadeDeTrabalho,
+          gerarId: randomUUID,
+        }),
+        liberarPagamento: new LiberarPagamento({
+          contratos,
+          pagamentos,
+          projetos,
+          gateway: gatewayPagamento,
+          unidadeDeTrabalho,
+        }),
         autenticar: autenticacao,
       }),
     ],
