@@ -16,10 +16,10 @@ function ListaContratos({ contratos }: { contratos: Contrato[] }) {
         const cliente = contrato.clienteId === usuario?.id;
         return (
           <li key={contrato.id}>
-            <Cartao className="relative grid animate-surgir gap-3 p-5 transition hover:border-primaria/40 hover:shadow-elevado sm:grid-cols-[1fr_auto_auto] sm:items-center sm:gap-8">
+            <Cartao className="relative grid animate-surgir gap-3 p-5 transition duration-300 hover:-translate-y-1 hover:shadow-elevado sm:grid-cols-[1fr_auto_auto] sm:items-center sm:gap-8">
               <div>
                 <h2 className="text-base font-semibold tracking-tight">
-                  <Link to={`/contratos/${contrato.id}`} className="rounded after:absolute after:inset-0 after:rounded-cartao">{contrato.projetoTitulo}</Link>
+                  <Link to={`/contratos/${contrato.id}`} className="after:absolute after:inset-0 after:rounded-cartao">{contrato.projetoTitulo}</Link>
                 </h2>
                 <p className="text-texto-suave">{cliente ? `Freelancer: ${contrato.freelancerNome}` : `Cliente: ${contrato.clienteNome}`}</p>
               </div>

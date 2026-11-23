@@ -15,7 +15,7 @@ export function Carregando() {
 export function EstadoVazio({ titulo, descricao, acao }: { titulo: string; descricao?: string; acao?: ReactNode }) {
   return (
     <div className="rounded-cartao border border-dashed border-borda bg-superficie/70 px-6 py-14 text-center">
-      <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-primaria-suave text-primaria">
+      <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-none bg-primaria-suave text-primaria">
         <Inbox className="h-5 w-5" aria-hidden />
       </span>
       <p className="mt-3 font-semibold">{titulo}</p>
@@ -47,12 +47,18 @@ export function AvisoErro({ mensagem }: { mensagem: string }) {
   );
 }
 
-export function CabecalhoPagina({ titulo, descricao, acao }: { titulo: string; descricao?: string; acao?: ReactNode }) {
+interface CabecalhoProps {
+  titulo: string;
+  descricao?: string;
+  acao?: ReactNode;
+}
+
+export function CabecalhoPagina({ titulo, descricao, acao }: CabecalhoProps) {
   return (
-    <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <header className="mb-7 flex animate-surgir flex-col gap-4 rounded-cartao bg-oliva px-6 py-7 text-white sm:px-8 md:flex-row md:items-end md:justify-between">
       <div>
         <h1 className="text-titulo">{titulo}</h1>
-        {descricao && <p className="mt-1 text-texto-suave">{descricao}</p>}
+        {descricao && <p className="mt-1.5 text-white/80">{descricao}</p>}
       </div>
       {acao}
     </header>

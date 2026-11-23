@@ -1,6 +1,6 @@
 import type { HTMLAttributes } from 'react';
 
-export const CLASSES_CARTAO = 'rounded-cartao border border-borda bg-superficie shadow-cartao';
+export const CLASSES_CARTAO = 'rounded-cartao bg-superficie shadow-cartao';
 
 export function Cartao({ className = '', ...resto }: HTMLAttributes<HTMLDivElement>) {
   return <div className={`${CLASSES_CARTAO} ${className}`} {...resto} />;
@@ -8,7 +8,7 @@ export function Cartao({ className = '', ...resto }: HTMLAttributes<HTMLDivEleme
 
 export function Etiqueta({ children }: { children: string }) {
   return (
-    <span className="rounded-md bg-neutro-suave px-2 py-0.5 text-detalhe font-medium text-texto-suave">
+    <span className="rounded-full bg-neutro-suave px-2.5 py-0.5 text-detalhe font-medium text-texto-suave">
       {children}
     </span>
   );

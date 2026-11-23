@@ -41,16 +41,16 @@ export function EnviarProposta() {
     });
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div>
       <CabecalhoPagina titulo="Enviar proposta" descricao={projeto.titulo} />
-      <Cartao className="mb-4 p-4">
+      <Cartao className="mx-auto mb-5 max-w-2xl p-5">
         <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           <Dado rotulo="Cliente" valor={projeto.clienteNome} />
           <Dado rotulo="Orçamento" valor={formatarMoeda(projeto.orcamento)} />
           <Dado rotulo="Prazo desejado" valor={formatarData(projeto.prazoDesejado)} />
         </dl>
       </Cartao>
-      <Cartao className="p-6">
+      <Cartao className="mx-auto max-w-2xl p-6 sm:p-8">
         <form onSubmit={handleSubmit(enviar)} className="space-y-4" noValidate>
           {enviarProposta.isError && <AvisoErro mensagem={mensagemDoErro(enviarProposta.error)} />}
           <div className="grid gap-4 sm:grid-cols-2">

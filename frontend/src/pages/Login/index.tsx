@@ -21,7 +21,8 @@ const esquema = z.object({
 export function Login() {
   const { entrar, avisoExpirada } = useSessao();
   const navegar = useNavigate();
-  const estado = useLocation().state as { sucesso?: string } | null;
+  const estado = useLocation().state as { sucesso?: string; perfil?: 'CLIENTE' | 'FREELANCER' } | null;
+  const perfil = estado?.perfil;
   const [erro, setErro] = useState('');
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<Credenciais>({ resolver: zodResolver(esquema) });
 
@@ -36,7 +37,7 @@ export function Login() {
   };
 
   return (
-    <LayoutAutenticacao titulo="Entrar" descricao="Acesse sua conta para continuar.">
+    <LayoutAutenticacao titulo="Entrar" descricao={perfil ? `Acesse sua conta de ${perfil === 'CLIENTE' ? 'cliente' : 'freelancer'}.` : 'Acesse sua conta para continuar.'}>
       <form onSubmit={handleSubmit(enviar)} className="space-y-4" noValidate>
         {avisoExpirada && <AvisoErro mensagem="Sua sessão expirou. Entre novamente." />}
         {estado?.sucesso && <p role="status" className="rounded-campo bg-sucesso-suave px-3 py-2 font-medium text-sucesso">{estado.sucesso}</p>}
@@ -48,14 +49,14 @@ export function Login() {
       {modoSimulado && (
         <div className="mt-5 rounded-campo border border-dashed border-borda p-3">
           <p className="text-detalhe text-texto-suave">Modo de demonstração</p>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            <Botao variante="secundaria" onClick={() => enviar(CONTAS_DEMO.cliente)}>Sou cliente</Botao>
-            <Botao variante="secundaria" onClick={() => enviar(CONTAS_DEMO.freelancer)}>Sou freelancer</Botao>
+          <div className={`mt-2 grid gap-2 ${perfil ? '' : 'grid-cols-2'}`}>
+            {perfil !== 'FREELANCER' && <Botao variante="secundaria" onClick={() => enviar(CONTAS_DEMO.cliente)}>Entrar como cliente</Botao>}
+            {perfil !== 'CLIENTE' && <Botao variante="secundaria" onClick={() => enviar(CONTAS_DEMO.freelancer)}>Entrar como freelancer</Botao>}
           </div>
         </div>
       )}
       <p className="mt-5 text-center text-texto-suave">
-        Ainda não tem conta? <Link to="/cadastro" className="font-semibold text-primaria hover:underline">Cadastre-se</Link>
+        Ainda não tem conta? <Link to="/cadastro" state={{ perfil }} className="font-semibold text-black underline underline-offset-4">Cadastre-se</Link>
       </p>
     </LayoutAutenticacao>
   );

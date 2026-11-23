@@ -62,9 +62,9 @@ export function NovoProjeto() {
     );
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div>
       <CabecalhoPagina titulo="Novo projeto" descricao="Descreva o trabalho para receber propostas." />
-      <Cartao className="p-6">
+      <Cartao className="mx-auto max-w-2xl p-6 sm:p-8">
         <form onSubmit={handleSubmit(enviar)} className="space-y-4" noValidate>
           {publicar.isError && <AvisoErro mensagem={mensagemDoErro(publicar.error)} />}
           <Campo rotulo="Título" erro={errors.titulo?.message} {...register('titulo')} />
@@ -78,9 +78,9 @@ export function NovoProjeto() {
             {habilidades.length > 0 && (
               <ul className="mt-2 flex flex-wrap gap-1.5">
                 {habilidades.map((h) => (
-                  <li key={h} className="inline-flex items-center gap-1 rounded-full bg-primaria-suave py-0.5 pl-2.5 pr-1 text-detalhe font-medium text-primaria-forte">
+                  <li key={h} className="inline-flex items-center gap-1 rounded-none bg-primaria-suave py-0.5 pl-2.5 pr-1 text-detalhe font-medium text-primaria-forte">
                     {h}
-                    <button type="button" aria-label={`Remover ${h}`} className="rounded-full p-0.5 hover:bg-primaria/15" onClick={() => setHabilidades((lista) => lista.filter((x) => x !== h))}>
+                    <button type="button" aria-label={`Remover ${h}`} className="rounded-none p-0.5 hover:bg-primaria/15" onClick={() => setHabilidades((lista) => lista.filter((x) => x !== h))}>
                       <X className="h-3 w-3" aria-hidden />
                     </button>
                   </li>

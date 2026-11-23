@@ -26,7 +26,7 @@ function LinhaDoTempo({ status }: { status: StatusPagamento }) {
         return (
           <li key={etapa} className="relative flex flex-1 flex-col items-center text-center" aria-current={ativa ? 'step' : undefined}>
             {i > 0 && <span className={`absolute right-1/2 top-4 h-0.5 w-full ${i <= atual ? 'bg-primaria' : 'bg-borda'}`} aria-hidden />}
-            <span className={`relative flex h-8 w-8 items-center justify-center rounded-full text-detalhe font-bold ${feita ? 'gradiente-marca text-white' : ativa ? 'bg-primaria-suave text-primaria-forte ring-2 ring-primaria' : 'bg-neutro-suave text-texto-suave'}`}>
+            <span className={`relative flex h-8 w-8 items-center justify-center rounded-full text-detalhe font-bold ${feita ? 'bg-black text-white' : ativa ? 'bg-primaria-suave text-primaria-forte ring-2 ring-black' : 'bg-neutro-suave text-texto-suave'}`}>
               {feita ? <Check className="h-4 w-4" aria-hidden /> : i + 1}
             </span>
             <span className={`mt-2 text-detalhe ${ativa ? 'font-semibold text-texto' : 'text-texto-suave'}`}>{ROTULO_STATUS[etapa]}</span>
@@ -70,13 +70,14 @@ export function Contrato() {
     });
 
   return (
-    <div className="mx-auto grid max-w-3xl animate-surgir gap-4">
+    <div className="animate-surgir">
+      <div className="mx-auto grid max-w-3xl gap-5">
       <Cartao className="p-6 sm:p-8">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-detalhe font-medium text-texto-suave">Contrato</p>
             <h1 className="text-titulo">{dados.projetoTitulo}</h1>
-            <Link to={`/projetos/${dados.projetoId}`} className="font-semibold text-primaria hover:underline">Ver projeto</Link>
+            <Link to={`/projetos/${dados.projetoId}`} className="font-semibold text-black underline underline-offset-4">Ver projeto</Link>
           </div>
           <StatusBadge status={dados.status} />
         </div>
@@ -114,6 +115,7 @@ export function Contrato() {
         onConfirmar={liberar}
         onFechar={() => setConfirmando(false)}
       />
+      </div>
     </div>
   );
 }

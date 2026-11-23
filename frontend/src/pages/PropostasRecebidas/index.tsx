@@ -41,7 +41,7 @@ export function PropostasRecebidas() {
       <CabecalhoPagina
         titulo="Propostas recebidas"
         descricao={projeto.data.titulo}
-        acao={<Link to={`/projetos/${id}`} className="font-semibold text-primaria hover:underline">Ver projeto</Link>}
+        acao={<Link to={`/projetos/${id}`} className="font-semibold text-white underline-offset-4 hover:underline">Ver projeto</Link>}
       />
       {aceitar.isError && <div className="mb-4"><AvisoErro mensagem={mensagemDoErro(aceitar.error)} /></div>}
       {propostas.data.length === 0 ? (
@@ -56,7 +56,7 @@ export function PropostasRecebidas() {
                   <StatusBadge status={proposta.status} />
                 </div>
                 <p className="mt-2 whitespace-pre-line text-texto-suave">{proposta.mensagem}</p>
-                <div className="mt-4 flex flex-wrap items-end justify-between gap-3 border-t border-borda pt-3">
+                <div className="mt-4 flex flex-wrap items-end justify-between gap-3 pt-1">
                   <dl className="flex gap-8">
                     <Dado rotulo="Valor" valor={formatarMoeda(proposta.valor)} />
                     <Dado rotulo="Prazo" valor={formatarDias(proposta.prazoDias)} />
